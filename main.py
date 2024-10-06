@@ -4,17 +4,11 @@ import numpy as np
 import sys
 import csv
 
-class SignalViewer(QtWidgets.QMainWindow):
-  def __init__(self):
-    super().__init__()
+class GraphWidget(QtWidgets.QWidget):
+  def __init__(self,parent=None):
+    super().__init__(parent)
+    self.layout = QtWidgets.QHBoxLayout(self)
 
-    self.setWindowTitle("Signal Viewer")
-    self.setGeometry(100, 100, 1000, 600)
-
-    self.central_widget = QtWidgets.QWidget()
-    self.setCentralWidget(self.central_widget)
-    self.layout = QtWidgets.QHBoxLayout(self.central_widget)
-    
     self.graph = pg.PlotWidget()
     self.layout.addWidget(self.graph)
     
@@ -111,17 +105,18 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.graph.setXRange(min(time), max(time))
 
   def select_color(self):
+      
     color = QtWidgets.QColorDialog.getColor()
     if color.isValid():
         
         self.selectedColor = (color.red(), color.green(), color.blue())
       
         for item in self.signalListWidget.selectedItems():
-          index = self.signalListWidget.row(item)
-          self.signalColors[index] = self.selectedColor  
-          
-          if index < len(self.signalsLines):  
-              self.signalsLines[index].setPen(pg.mkPen(color=self.selectedColor, width=2))  
+            index = self.signalListWidget.row(item)
+            self.signalColors[index] = self.selectedColor  
+            
+            if index < len(self.signalsLines):  
+                self.signalsLines[index].setPen(pg.mkPen(color=self.selectedColor, width=2))  
 
   def update_play_button_state(self):
     has_selected = any(item.checkState() == QtCore.Qt.CheckState.Checked for item in self.signalListWidget.findItems("*", QtCore.Qt.MatchFlag.MatchWildcard))
@@ -130,11 +125,13 @@ class SignalViewer(QtWidgets.QMainWindow):
   def update(self):
     if self.isPaused:
         return  
+
     while len(self.signalsLines) < len(self.signals):
         self.signalsLines.append(None)  
 
     for index in range(self.signalListWidget.count()):
       item = self.signalListWidget.item(index)
+      
       if item.checkState() == QtCore.Qt.CheckState.Checked:
         time, amplitude = self.signals[index]  
         current_pos = self.currentPositions[index]  
@@ -192,14 +189,41 @@ class SignalViewer(QtWidgets.QMainWindow):
           self.graph.removeItem(self.signalsLines[index])  
           del self.signalsLines[index]
 
+class SignalViewer(QtWidgets.QMainWindow):
+  def __init__(self):
+    super().__init__()
 
+    self.setWindowTitle("Signal Viewer")
+    self.setGeometry(100, 100, 1200, 600)
+
+    self.central_widget = QtWidgets.QWidget()
+    self.setCentralWidget(self.central_widget)
+    self.layout = QtWidgets.QVBoxLayout(self.central_widget)
+
+    self.graphBox1 = GraphWidget(self)
+    self.graphBox2 = GraphWidget(self)
+
+    self.layout.addWidget(self.graphBox1)
+    self.layout.addWidget(self.graphBox2)
+
+    self.timer = QtCore.QTimer()
+    self.timer.setInterval(100)  
+    self.timer.timeout.connect(self.update_graphs)
+    self.timer.start()
+    
+  def update_graphs(self):
+        self.graphBox1.update()
+        self.graphBox2.update()
+
+  
 def main():
-  app = QtWidgets.QApplication(sys.argv)
-  viewer = SignalViewer()
-  viewer.show()
-  sys.exit(app.exec())
+    app = QtWidgets.QApplication(sys.argv)
+    viewer = SignalViewer()
+    viewer.show()
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
-  main()
+    main()
+
 
 
