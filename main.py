@@ -1,8 +1,51 @@
-from PyQt6 import QtWidgets, QtCore
+from PyQt6.QtPrintSupport import QPrinter
+from PyQt6 import QtWidgets, QtCore,QtGui
+from PyQt6.QtGui import QPainter
 import pyqtgraph as pg
 import numpy as np
 import sys
 import csv
+
+
+class ReportDialog(QtWidgets.QDialog):
+    def __init__(self, graph_widget, parent=None):
+        super().__init__(parent)
+        self.graph_widget = graph_widget  
+        self.setWindowTitle("Create Report")
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        
+        self.textEdit = QtWidgets.QTextEdit()
+        self.layout.addWidget(self.textEdit)
+        
+        self.exportButton = QtWidgets.QPushButton("Export")
+        self.exportButton.clicked.connect(self.export_report)
+        self.layout.addWidget(self.exportButton)
+
+        self.screenshotButton = QtWidgets.QPushButton("Add Screenshot")
+        self.screenshotButton.clicked.connect(self.add_screenshot_to_report)
+        self.layout.addWidget(self.screenshotButton)
+
+    def add_screenshot_to_report(self):
+      graph_widget = self.graph_widget.graph  
+      graph_rect = graph_widget.geometry()
+      screen = QtGui.QGuiApplication.primaryScreen()
+      screenshot = screen.grabWindow(graph_widget.winId(), graph_rect.x(), graph_rect.y(), graph_rect.width() - 10, graph_rect.height() - 10)
+      cursor = self.textEdit.textCursor()
+      cursor.insertImage(screenshot, "Screenshot")  
+      self.textEdit.setTextCursor(cursor)
+
+    def export_report(self):
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, None, None, "PDF Files (*.pdf);;All Files (*)"
+        )
+        
+        if fileName:
+            printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+            printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+            printer.setOutputFileName(fileName)
+            self.textEdit.document().print(printer)
+            self.close()
 
 class GraphWidget(QtWidgets.QWidget):
   def __init__(self,parent=None):
@@ -10,10 +53,12 @@ class GraphWidget(QtWidgets.QWidget):
     self.layout = QtWidgets.QHBoxLayout(self)
 
     self.graph = pg.PlotWidget()
+    self.graph.showGrid(x=True, y=True)
     self.layout.addWidget(self.graph)
     
     self.signalFrame = QtWidgets.QFrame(self)
     self.signalFrame.setFixedWidth(250)  
+    self.signalFrame.setMinimumHeight(350)  
     self.layout.addWidget(self.signalFrame)
     
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
@@ -30,11 +75,11 @@ class GraphWidget(QtWidgets.QWidget):
     self.signalListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
     self.signalLayout.addWidget(self.signalListWidget)
 
-    self.loadSignalButton = QtWidgets.QPushButton("Load Signal from CSV")
+    self.loadSignalButton = QtWidgets.QPushButton("Load Signal")
     self.loadSignalButton.clicked.connect(self.load_signal)
     self.signalLayout.addWidget(self.loadSignalButton)
     
-    self.colorButton = QtWidgets.QPushButton("Select Color for Signal")
+    self.colorButton = QtWidgets.QPushButton("Select Color")
     self.colorButton.clicked.connect(self.select_color)
     self.signalLayout.addWidget(self.colorButton)
     
@@ -53,10 +98,14 @@ class GraphWidget(QtWidgets.QWidget):
     self.clearButton.clicked.connect(self.clear_selected_graph)
     self.signalLayout.addWidget(self.clearButton)
 
-    self.deleteButton = QtWidgets.QPushButton("Delete Selected Signal")
+    self.deleteButton = QtWidgets.QPushButton("Delete Signal")
     self.deleteButton.clicked.connect(self.delete_selected_signal)
     self.signalLayout.addWidget(self.deleteButton)
     
+    self.reportButton = QtWidgets.QPushButton("Create Report")
+    self.reportButton.clicked.connect(self.open_report_dialog) 
+    self.signalLayout.addWidget(self.reportButton)
+
     self.timer = QtCore.QTimer()
     self.timer.setInterval(100)  
     self.timer.timeout.connect(self.update)
@@ -70,9 +119,16 @@ class GraphWidget(QtWidgets.QWidget):
     self.selectedColor = (255, 0, 0)  
     self.defaultSpeed = 10  
 
+    self.report_dialog = None
+
+  def open_report_dialog(self):
+      if self.report_dialog is None:
+        report_dialog = ReportDialog(self) 
+        report_dialog.show()
+      self.report_dialog.show()
   def load_signal(self):
       
-    filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open Signal File", "", "CSV Files (*.csv)")
+    filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, None, None, "CSV Files (*.csv)")
     if filePath:
         time, amplitude = [], []
         with open(filePath, 'r') as csvfile:
