@@ -1,23 +1,27 @@
 from PyQt6.QtPrintSupport import QPrinter
 from PyQt6 import QtWidgets, QtCore,QtGui
-from PyQt6.QtGui import QPainter
 import pyqtgraph as pg
 import numpy as np
 import sys
 import csv
-
 
 class ReportDialog(QtWidgets.QDialog):
     def __init__(self, graph_widget, parent=None):
         super().__init__(parent)
         self.graph_widget = graph_widget  
         self.setWindowTitle("Create Report")
+        self.setMinimumSize(500, 500)
 
         self.layout = QtWidgets.QVBoxLayout(self)
-        
         self.textEdit = QtWidgets.QTextEdit()
+        default_font = QtGui.QFont()
+        default_font.setPointSize(14)  
+        default_font.setWeight(50)  
+        default_font.setFamily("Arial")  
+        self.textEdit.setFont(default_font)
+        self.textEdit.setStyleSheet("QTextEdit { padding: 10px; }")  
+
         self.layout.addWidget(self.textEdit)
-        
         self.exportButton = QtWidgets.QPushButton("Export")
         self.exportButton.clicked.connect(self.export_report)
         self.layout.addWidget(self.exportButton)
@@ -27,19 +31,19 @@ class ReportDialog(QtWidgets.QDialog):
         self.layout.addWidget(self.screenshotButton)
 
     def add_screenshot_to_report(self):
-      graph_widget = self.graph_widget.graph  
-      graph_rect = graph_widget.geometry()
-      screen = QtGui.QGuiApplication.primaryScreen()
-      screenshot = screen.grabWindow(graph_widget.winId(), graph_rect.x(), graph_rect.y(), graph_rect.width() - 10, graph_rect.height() - 10)
-      cursor = self.textEdit.textCursor()
-      cursor.insertImage(screenshot, "Screenshot")  
-      self.textEdit.setTextCursor(cursor)
+        graph_widget = self.graph_widget.graph  
+        graph_rect = graph_widget.geometry()
+        screen = QtGui.QGuiApplication.primaryScreen()
+        screenshot = screen.grabWindow(graph_widget.winId(), graph_rect.x(), graph_rect.y(), graph_rect.width() - 10, graph_rect.height() - 10)
+        resized_screenshot = screenshot.scaled(600, 400, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+        cursor = self.textEdit.textCursor()
+        cursor.insertImage(resized_screenshot.toImage(), "Screenshot")  
+        self.textEdit.setTextCursor(cursor)
 
     def export_report(self):
         fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, None, None, "PDF Files (*.pdf);;All Files (*)"
         )
-        
         if fileName:
             printer = QPrinter(QPrinter.PrinterMode.HighResolution)
             printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
@@ -55,7 +59,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.graph = pg.PlotWidget()
     self.graph.showGrid(x=True, y=True)
     self.layout.addWidget(self.graph)
-    
     self.signalFrame = QtWidgets.QFrame(self)
     self.signalFrame.setFixedWidth(250)  
     self.signalFrame.setMinimumHeight(350)  
@@ -112,8 +115,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.timer.start()
     
     self.playPauseButton.setEnabled(False)
-
-    
     self.signalListWidget.itemChanged.connect(self.update_play_button_state)
     
     self.selectedColor = (255, 0, 0)  
@@ -122,12 +123,12 @@ class GraphWidget(QtWidgets.QWidget):
     self.report_dialog = None
 
   def open_report_dialog(self):
-      if self.report_dialog is None:
-        report_dialog = ReportDialog(self) 
-        report_dialog.show()
-      self.report_dialog.show()
+    if self.report_dialog is None:
+        self.report_dialog = ReportDialog(self)
+        parent_pos = self.mapToGlobal(self.pos())
+        self.report_dialog.move(parent_pos.x() + self.width(), parent_pos.y())
+    self.report_dialog.show()
   def load_signal(self):
-      
     filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, None, None, "CSV Files (*.csv)")
     if filePath:
         time, amplitude = [], []
@@ -170,7 +171,6 @@ class GraphWidget(QtWidgets.QWidget):
         for item in self.signalListWidget.selectedItems():
             index = self.signalListWidget.row(item)
             self.signalColors[index] = self.selectedColor  
-            
             if index < len(self.signalsLines):  
                 self.signalsLines[index].setPen(pg.mkPen(color=self.selectedColor, width=2))  
 
@@ -181,7 +181,6 @@ class GraphWidget(QtWidgets.QWidget):
   def update(self):
     if self.isPaused:
         return  
-
     while len(self.signalsLines) < len(self.signals):
         self.signalsLines.append(None)  
 
@@ -223,7 +222,6 @@ class GraphWidget(QtWidgets.QWidget):
     selected_items = self.signalListWidget.selectedItems()
     for item in selected_items:
         index = self.signalListWidget.row(item)
-
         if index < len(self.signalsLines) and self.signalsLines[index] is not None:
             self.graph.removeItem(self.signalsLines[index])  
             self.signalsLines[index] = None  
@@ -233,9 +231,7 @@ class GraphWidget(QtWidgets.QWidget):
     selected_items = self.signalListWidget.selectedItems()
     for item in selected_items:
       index = self.signalListWidget.row(item)
-      
       self.signalListWidget.takeItem(index)
-
       del self.signals[index]
       del self.currentPositions[index]
       del self.signalColors[index]
