@@ -116,11 +116,38 @@ class GraphWidget(QtWidgets.QWidget):
     
     self.playPauseButton.setEnabled(False)
     self.signalListWidget.itemChanged.connect(self.update_play_button_state)
+
+    self.signalListWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+    self.signalListWidget.customContextMenuRequested.connect(self.show_context_menu)
     
     self.selectedColor = (255, 0, 0)  
     self.defaultSpeed = 10  
 
     self.report_dialog = None
+
+  def show_context_menu(self, pos):
+        item = self.signalListWidget.itemAt(pos)
+        if item is not None:
+            index = self.signalListWidget.row(item)
+            self.show_statistics_tooltip(index, pos)
+
+  def show_statistics_tooltip(self, index, pos):
+      if index < len(self.signals):
+          time, amplitude = self.signals[index]
+          max_value = np.max(amplitude)
+          min_value = np.min(amplitude)
+          time_length = time[-1] - time[0]  
+          speed = self.signalSpeeds[index]
+          color = self.signalColors[index]
+          statistics_message = (
+            f"<b style='color: blue;'>Signal:</b> {self.signalListWidget.item(index).text()}<br>"
+            f"<b style='color: blue;'>Max Value:</b> {max_value}<br>"
+            f"<b style='color: blue;'>Min Value:</b> {min_value}<br>"
+            f"<b style='color: blue;'>Time Length:</b> {time_length:.2f}<br>"
+            f"<b style='color: blue;'>Speed:</b> {speed}<br>"
+            f"<b style='color: blue;'>Color:</b> {color}"
+          )
+          QtWidgets.QToolTip.showText(self.signalListWidget.mapToGlobal(pos), statistics_message)
 
   def open_report_dialog(self):
     if self.report_dialog is None:
@@ -141,17 +168,12 @@ class GraphWidget(QtWidgets.QWidget):
         
         time = np.array(time)
         amplitude = np.array(amplitude)
-
-        
         self.signals.append((time, amplitude))
-        
-        signalName = filePath.split('/')[-1]  
-        
+        signalName = (filePath.split('/')[-1]  ).split('.')[0]
         item = QtWidgets.QListWidgetItem(signalName)
         item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
         item.setCheckState(QtCore.Qt.CheckState.Unchecked)
         self.signalListWidget.addItem(item)
-
         
         self.currentPositions.append(0)  
         self.signalColors.append(self.selectedColor)  
@@ -162,17 +184,13 @@ class GraphWidget(QtWidgets.QWidget):
         self.graph.setXRange(min(time), max(time))
 
   def select_color(self):
-      
     color = QtWidgets.QColorDialog.getColor()
-    if color.isValid():
-        
-        self.selectedColor = (color.red(), color.green(), color.blue())
-      
-        for item in self.signalListWidget.selectedItems():
-            index = self.signalListWidget.row(item)
-            self.signalColors[index] = self.selectedColor  
-            if index < len(self.signalsLines):  
-                self.signalsLines[index].setPen(pg.mkPen(color=self.selectedColor, width=2))  
+    self.selectedColor = (color.red(), color.green(), color.blue())
+    for item in self.signalListWidget.selectedItems():
+        index = self.signalListWidget.row(item)
+        self.signalColors[index] = self.selectedColor  
+        if index < len(self.signalsLines):  
+            self.signalsLines[index].setPen(pg.mkPen(color=self.selectedColor, width=2))  
 
   def update_play_button_state(self):
     has_selected = any(item.checkState() == QtCore.Qt.CheckState.Checked for item in self.signalListWidget.findItems("*", QtCore.Qt.MatchFlag.MatchWildcard))
@@ -190,20 +208,14 @@ class GraphWidget(QtWidgets.QWidget):
       if item.checkState() == QtCore.Qt.CheckState.Checked:
         time, amplitude = self.signals[index]  
         current_pos = self.currentPositions[index]  
-
         if current_pos >= len(time):
             continue  
-
         new_pos = min(current_pos + self.signalSpeeds[index], len(time))
-
         if self.signalsLines[index] is None:
-            
             pen = pg.mkPen(color=self.signalColors[index], width=2)
             self.signalsLines[index] = self.graph.plot(time[:new_pos], amplitude[:new_pos], pen=pen)
         else:
-            
             self.signalsLines[index].setData(time[:new_pos], amplitude[:new_pos])
-        
         self.currentPositions[index] = new_pos
 
   def play_pause(self):
