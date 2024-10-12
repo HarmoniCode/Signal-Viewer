@@ -70,6 +70,15 @@ class GraphWidget(QtWidgets.QWidget):
     self.graph.addItem(self.roi)
     
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
+
+    self.zoomPanel = QtWidgets.QHBoxLayout()
+    self.signalLayout.addLayout(self.zoomPanel)
+    self.zoomInButton = QtWidgets.QPushButton("Zoom In")
+    self.zoomInButton.clicked.connect(self.zoom_in)
+    self.zoomPanel.addWidget(self.zoomInButton)
+    self.zoomOutButton = QtWidgets.QPushButton("Zoom Out")
+    self.zoomOutButton.clicked.connect(self.zoom_out)
+    self.zoomPanel.addWidget(self.zoomOutButton)
     
     self.signals = []  
     self.signalsLines = []  
@@ -268,7 +277,31 @@ class GraphWidget(QtWidgets.QWidget):
       if index < len(self.signalsLines):
           self.graph.removeItem(self.signalsLines[index])  
           del self.signalsLines[index]
+  def zoom_in(self):
+        current_x_range = self.graph.viewRange()[0]
+        current_y_range = self.graph.viewRange()[1]
 
+      # Zoom in by reducing the range by 10%
+        new_x_range = (current_x_range[0] + (current_x_range[1] - current_x_range[0]) * 0.1,
+                       current_x_range[1] - (current_x_range[1] - current_x_range[0]) * 0.1)
+        new_y_range = (current_y_range[0] + (current_y_range[1] - current_y_range[0]) * 0.1,
+                       current_y_range[1] - (current_y_range[1] - current_y_range[0]) * 0.1)
+
+        self.graph.setXRange(*new_x_range, padding=0)
+        self.graph.setYRange(*new_y_range, padding=0)
+
+  def zoom_out(self):
+        current_x_range = self.graph.viewRange()[0]
+        current_y_range = self.graph.viewRange()[1]
+
+      # Zoom out by increasing the range by 10%
+        new_x_range = (current_x_range[0] - (current_x_range[1] - current_x_range[0]) * 0.1,
+                       current_x_range[1] + (current_x_range[1] - current_x_range[0]) * 0.1)
+        new_y_range = (current_y_range[0] - (current_y_range[1] - current_y_range[0]) * 0.1,
+                       current_y_range[1] + (current_y_range[1] - current_y_range[0]) * 0.1)
+
+        self.graph.setXRange(*new_x_range, padding=0)
+        self.graph.setYRange(*new_y_range, padding=0)
 class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
