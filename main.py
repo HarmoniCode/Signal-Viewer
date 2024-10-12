@@ -1,5 +1,6 @@
 from PyQt6.QtPrintSupport import QPrinter
 from PyQt6 import QtWidgets, QtCore,QtGui
+import scipy.interpolate as interp
 import pyqtgraph as pg
 import numpy as np
 import sys
@@ -61,8 +62,12 @@ class GraphWidget(QtWidgets.QWidget):
     self.layout.addWidget(self.graph)
     self.signalFrame = QtWidgets.QFrame(self)
     self.signalFrame.setFixedWidth(250)  
-    self.signalFrame.setMinimumHeight(350)  
+    self.signalFrame.setMinimumHeight(300)  
     self.layout.addWidget(self.signalFrame)
+
+    self.roi = pg.LinearRegionItem()
+    self.roi.setZValue(10)  
+    self.graph.addItem(self.roi)
     
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
     
@@ -108,19 +113,24 @@ class GraphWidget(QtWidgets.QWidget):
     self.reportButton = QtWidgets.QPushButton("Create Report")
     self.reportButton.clicked.connect(self.open_report_dialog) 
     self.signalLayout.addWidget(self.reportButton)
+    
+    self.playPauseButton.setEnabled(False)
+    self.signalListWidget.itemChanged.connect(self.update_play_button_state)
 
+    self.selectedColor = (255, 0, 0)  
+    self.defaultSpeed = 10  
+
+    self.roi.sigRegionChanged.connect(self.on_roi_changed)  
+
+    self.report_dialog = None
+    
     self.timer = QtCore.QTimer()
     self.timer.setInterval(100)  
     self.timer.timeout.connect(self.update)
     self.timer.start()
-    
-    self.playPauseButton.setEnabled(False)
-    self.signalListWidget.itemChanged.connect(self.update_play_button_state)
-    
-    self.selectedColor = (255, 0, 0)  
-    self.defaultSpeed = 10  
 
-    self.report_dialog = None
+  def on_roi_changed(self):
+    self.selected_range = self.roi.getRegion()
 
   def open_report_dialog(self):
     if self.report_dialog is None:
@@ -141,7 +151,6 @@ class GraphWidget(QtWidgets.QWidget):
         
         time = np.array(time)
         amplitude = np.array(amplitude)
-
         
         self.signals.append((time, amplitude))
         
@@ -242,32 +251,171 @@ class GraphWidget(QtWidgets.QWidget):
           del self.signalsLines[index]
 
 class SignalViewer(QtWidgets.QMainWindow):
-  def __init__(self):
-    super().__init__()
+    def __init__(self):
+        super().__init__()
 
-    self.setWindowTitle("Signal Viewer")
-    self.setGeometry(100, 100, 1200, 600)
+        self.setWindowTitle("Signal Viewer")
+        self.setGeometry(100, 100, 1200, 600)
+        
+        self.central_widget = QtWidgets.QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.layout = QtWidgets.QVBoxLayout(self.central_widget)
+        
+        self.toggleThirdGraphButton = QtWidgets.QPushButton("Show Third Graph")
+        self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
+        self.layout.addWidget(self.toggleThirdGraphButton)
 
-    self.central_widget = QtWidgets.QWidget()
-    self.setCentralWidget(self.central_widget)
-    self.layout = QtWidgets.QVBoxLayout(self.central_widget)
+        self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
+        self.toggleROIButton.clicked.connect(self.toggle_roi)
+        self.layout.addWidget(self.toggleROIButton)
+        
+        self.graphBox1 = GraphWidget(self)
+        self.graphBox2 = GraphWidget(self)
+        self.layout.addWidget(self.graphBox1)
+        self.layout.addWidget(self.graphBox2)
+        
+        self.glue_layout = QtWidgets.QHBoxLayout()
+        self.glue_tool_box_layout = QtWidgets.QVBoxLayout()
+        self.glue_tool_box = QtWidgets.QFrame(self)
+        self.glue_tool_box.setFixedWidth(250)
+        self.glue_tool_box.setMinimumHeight(250)
+        
+        self.thirdGraph = pg.PlotWidget()
+        self.thirdGraph.showGrid(x=True, y=True)
+        self.thirdGraph.hide()  
 
-    self.graphBox1 = GraphWidget(self)
-    self.graphBox2 = GraphWidget(self)
+        self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
+        self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
+        self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
+        self.clearThirdGraphButton.hide()  
+        
+        self.glueButton = QtWidgets.QPushButton("Glue Signals")
+        self.glueButton.clicked.connect(self.glue_signals)
+        self.glue_tool_box_layout.addWidget(self.glueButton)
+        self.glueButton.hide()  
+        
+        self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.gap_slider.setMinimum(-100)  
+        self.gap_slider.setMaximum(100)
+        self.gap_slider.setValue(0)  
+        self.glue_tool_box_layout.addWidget(self.gap_slider)
+        self.gap_slider.hide()  
+        
+        self.interpolation_dropdown = QtWidgets.QComboBox()
+        self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])  
+        self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
+        self.interpolation_dropdown.hide()  
+        
+        self.glue_tool_box.setLayout(self.glue_tool_box_layout)
+        self.glue_layout.addWidget(self.thirdGraph)
+        self.glue_layout.addWidget(self.glue_tool_box)
+        self.layout.addLayout(self.glue_layout)
 
-    self.layout.addWidget(self.graphBox1)
-    self.layout.addWidget(self.graphBox2)
+        self.graphBox1.roi.show()  
+        self.graphBox2.roi.show()
 
-    self.timer = QtCore.QTimer()
-    self.timer.setInterval(100)  
-    self.timer.timeout.connect(self.update_graphs)
-    self.timer.start()
-    
-  def update_graphs(self):
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(100)
+        self.timer.timeout.connect(self.update_graphs)
+        self.timer.start()
+
+    def toggle_third_graph(self):
+        if self.thirdGraph.isVisible():
+            self.thirdGraph.hide()
+            self.clearThirdGraphButton.hide()
+            self.gap_slider.hide()
+            self.glueButton.hide()
+            self.interpolation_dropdown.hide()
+            self.toggleThirdGraphButton.setText("Show Third Graph")
+        else:
+            self.thirdGraph.show()
+            self.clearThirdGraphButton.show()
+            self.gap_slider.show()
+            self.glueButton.show()
+            self.interpolation_dropdown.show()
+            self.toggleThirdGraphButton.setText("Hide Third Graph")
+
+    def toggle_roi(self):
+        if self.graphBox1.roi.isVisible() and self.graphBox2.roi.isVisible():
+            self.graphBox1.roi.hide()
+            self.graphBox2.roi.hide()
+            self.toggleROIButton.setText("Show ROI")
+        else:
+            self.graphBox1.roi.show()
+            self.graphBox2.roi.show()
+            self.toggleROIButton.setText("Hide ROI")
+
+    def clear_third_graph(self):
+        self.thirdGraph.clear()
+
+    def glue_signals(self):
+        range1 = self.graphBox1.selected_range
+        range2 = self.graphBox2.selected_range
+
+        subsignal1 = self.extract_signal(self.graphBox1, range1)
+        subsignal2 = self.extract_signal(self.graphBox2, range2)
+
+        gap = self.gap_slider.value()  
+        interpolation_order = self.interpolation_dropdown.currentText()  
+        glued_signal = self.process_gap_or_overlap(subsignal1, subsignal2, gap, interpolation_order)
+        time = np.arange(len(glued_signal))
+        self.thirdGraph.plot(time, glued_signal, pen=pg.mkPen('b', width=2))
+
+    def extract_signal(self, graph_widget, selected_range):
+        time, amplitude = graph_widget.signals[0]  
+        mask = (time >= selected_range[0]) & (time <= selected_range[1])
+        return amplitude[mask]
+
+    def process_gap_or_overlap(self, subsignal1, subsignal2, gap, interpolation_order):
+      if gap > 0:
+          
+          interpolation_range = np.linspace(0, gap - 1, gap)
+          if interpolation_order == "Linear":
+              gap_signal = np.linspace(subsignal1[-1], subsignal2[0], gap)
+          elif interpolation_order == "Cubic":
+              if len(subsignal1) >= 2 and len(subsignal2) >= 2:
+                  x_points = [-1, 0, 1, 2]  
+                  y_points = [subsignal1[-2], subsignal1[-1], subsignal2[0], subsignal2[1]]
+                  cubic_interp = interp.interp1d(x_points, y_points, kind='cubic')
+                  gap_signal = cubic_interp(np.linspace(0, 1, gap))  
+              else:
+                  print("Not enough data points for cubic interpolation.")
+                  return None  
+          elif interpolation_order == "Nearest":
+              gap_signal = interp.interp1d([0, gap - 1], [subsignal1[-1], subsignal2[0]], kind='nearest')(interpolation_range)
+
+          glued_signal = np.concatenate([subsignal1, gap_signal, subsignal2])
+
+      else:
+          overlap = abs(gap)
+          if len(subsignal1) < overlap or len(subsignal2) < overlap:
+              print("Overlap too large for the signals.")
+              return None  
+
+          
+          if overlap > len(subsignal1) or overlap > len(subsignal2):
+              overlap = min(len(subsignal1), len(subsignal2))  
+
+          
+          if interpolation_order == "Linear":
+              interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='linear')
+          elif interpolation_order == "Cubic":
+              interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='cubic')
+          elif interpolation_order == "Nearest":
+              interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='nearest')
+
+          
+          interpolation_range = np.linspace(0, overlap - 1, overlap)
+          transition = (1 - interpolation_func(interpolation_range)) * subsignal1[-overlap:] + interpolation_func(interpolation_range) * subsignal2[:overlap]
+          glued_signal = np.concatenate([subsignal1[:-overlap], transition, subsignal2[overlap:]])
+
+      return glued_signal  
+
+    def update_graphs(self):
         self.graphBox1.update()
         self.graphBox2.update()
 
-  
+
 def main():
     app = QtWidgets.QApplication(sys.argv)
     viewer = SignalViewer()
@@ -276,6 +424,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
