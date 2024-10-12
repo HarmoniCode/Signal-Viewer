@@ -60,6 +60,10 @@ class GraphWidget(QtWidgets.QWidget):
     self.graph = pg.PlotWidget()
     self.graph.showGrid(x=True, y=True)
     self.layout.addWidget(self.graph)
+
+    self.legend = pg.LegendItem(offset=(70, 20))
+    self.legend.setParentItem(self.graph.graphicsItem())
+    
     self.signalFrame = QtWidgets.QFrame(self)
     self.signalFrame.setFixedWidth(250)  
     self.signalFrame.setMinimumHeight(300)  
@@ -147,6 +151,8 @@ class GraphWidget(QtWidgets.QWidget):
     self.selectedColor = (255, 0, 0)  
     self.defaultSpeed = 10  
 
+    self.sliders = {}
+
   def on_roi_changed(self):
     self.selected_range = self.roi.getRegion()
 
@@ -206,7 +212,44 @@ class GraphWidget(QtWidgets.QWidget):
 
         self.update_play_button_state()
 
-        self.graph.setXRange(min(time), max(time))
+        # self.graph.setXRange(min(time), max(time))
+        pen = pg.mkPen(color=self.selectedColor, width=2)
+        line_item = self.graph.plot(time, amplitude, pen=pen)
+        self.signalsLines.append(line_item)
+        self.legend.addItem(line_item, signalName)
+
+        x_padding = (max(time) - min(time)) * 0.05  # Add 5% padding
+        y_padding = (max(amplitude) - min(amplitude)) * 0.05  # Add 5% padding
+
+        self.graph.setXRange(min(time) - x_padding, max(time) + x_padding, padding=0)
+        self.graph.setYRange(min(amplitude) - y_padding, max(amplitude) + y_padding, padding=0)
+
+        self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
+        yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
+
+        self.add_slider_for_signal(len(self.signals) - 1)
+  def add_slider_for_signal(self, index):
+    slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+    slider.setMinimum(0)
+    slider.setMaximum(100)
+    slider.setValue(0)
+    slider.valueChanged.connect(lambda value, idx=index: self.slider_moved(idx, value))
+    self.signalLayout.addWidget(slider)
+    self.sliders[index] = slider
+  def slider_moved(self, index, value):
+    # Update the current position based on the slider value
+    self.currentPositions[index] = int(value / 100 * len(self.signals[index][0]))
+
+    # Get the signal data and the current position
+    time, amplitude = self.signals[index]
+    current_pos = self.currentPositions[index]
+
+    # Update the signal display on the graph immediately
+    if self.signalsLines[index] is None:
+        pen = pg.mkPen(color=self.signalColors[index], width=2)
+        self.signalsLines[index] = self.graph.plot(time[:current_pos], amplitude[:current_pos], pen=pen)
+    else:
+        self.signalsLines[index].setData(time[:current_pos], amplitude[:current_pos]) 
 
   def select_color(self):
     color = QtWidgets.QColorDialog.getColor()
@@ -243,6 +286,9 @@ class GraphWidget(QtWidgets.QWidget):
             self.signalsLines[index].setData(time[:new_pos], amplitude[:new_pos])
         self.currentPositions[index] = new_pos
 
+        if index in self.sliders and not self.isPaused:
+            self.sliders[index].setValue(int(new_pos / len(time) * 100))
+
   def play_pause(self):
     if self.isPaused:
         self.playPauseButton.setText("Pause")
@@ -256,27 +302,35 @@ class GraphWidget(QtWidgets.QWidget):
         self.signalSpeeds[index] = self.speedSlider.value() 
 
   def clear_selected_graph(self):
-    selected_items = self.signalListWidget.selectedItems()
-    for item in selected_items:
-        index = self.signalListWidget.row(item)
-        if index < len(self.signalsLines) and self.signalsLines[index] is not None:
-            self.graph.removeItem(self.signalsLines[index])  
-            self.signalsLines[index] = None  
-            self.currentPositions[index] = 0
+        selected_items = self.signalListWidget.selectedItems()
+        for item in selected_items:
+            index = self.signalListWidget.row(item)
+
+            if index < len(self.signalsLines) and self.signalsLines[index] is not None:
+                self.graph.removeItem(self.signalsLines[index])  
+                self.signalsLines[index] = None  
+                self.currentPositions[index] = 0
+                # Remove from legend
+                self.legend.removeItem(item.text())
 
   def delete_selected_signal(self):
-    selected_items = self.signalListWidget.selectedItems()
-    for item in selected_items:
-      index = self.signalListWidget.row(item)
-      self.signalListWidget.takeItem(index)
-      del self.signals[index]
-      del self.currentPositions[index]
-      del self.signalColors[index]
-      del self.signalSpeeds[index]
-      
-      if index < len(self.signalsLines):
-          self.graph.removeItem(self.signalsLines[index])  
-          del self.signalsLines[index]
+        selected_items = self.signalListWidget.selectedItems()
+        for item in selected_items:
+            index = self.signalListWidget.row(item)
+            
+            self.signalListWidget.takeItem(index)
+
+            del self.signals[index]
+            del self.currentPositions[index]
+            del self.signalColors[index]
+            del self.signalSpeeds[index]
+            
+            if index < len(self.signalsLines):
+                self.graph.removeItem(self.signalsLines[index])  
+                del self.signalsLines[index]
+                # Remove from legend
+                self.legend.removeItem(item.text())
+
   def zoom_in(self):
         current_x_range = self.graph.viewRange()[0]
         current_y_range = self.graph.viewRange()[1]
