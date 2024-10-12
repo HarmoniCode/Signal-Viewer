@@ -71,6 +71,7 @@ class GraphWidget(QtWidgets.QWidget):
     
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
     
+    
     self.signals = []  
     self.signalsLines = []  
     self.currentPositions = []  
@@ -199,6 +200,27 @@ class GraphWidget(QtWidgets.QWidget):
 
         self.graph.setXRange(min(time), max(time))
 
+        ######################### removed THE FOLLOWING LINE OF CODE so that i can fix the boundaries / view limits problem
+        # self.graph.setXRange(min(time), max(time))
+        
+        # Create a plot for the signal and add it to the legendz
+
+        pen = pg.mkPen(color=self.selectedColor, width=2)
+        line_item = self.graph.plot(time, amplitude, pen=pen)
+        self.signalsLines.append(line_item)
+        self.legend.addItem(line_item, signalName)
+
+        x_padding = (max(time) - min(time)) * 0.05  # Add 5% padding
+        y_padding = (max(amplitude) - min(amplitude)) * 0.05  # Add 5% padding
+
+        self.graph.setXRange(min(time) - x_padding, max(time) + x_padding, padding=0)
+        self.graph.setYRange(min(amplitude) - y_padding, max(amplitude) + y_padding, padding=0)
+
+        self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
+        yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
+
+        self.add_slider_for_signal(len(self.signals) - 1)
+
   def select_color(self):
     color = QtWidgets.QColorDialog.getColor()
     self.selectedColor = (color.red(), color.green(), color.blue())
@@ -269,6 +291,7 @@ class GraphWidget(QtWidgets.QWidget):
           self.graph.removeItem(self.signalsLines[index])  
           del self.signalsLines[index]
 
+  
 class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
