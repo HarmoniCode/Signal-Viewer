@@ -5,6 +5,7 @@ import pyqtgraph as pg
 import numpy as np
 import sys
 import csv
+from graphWidget_UI import GraphWidget_UI
 
 class ReportDialog(QtWidgets.QDialog):
     def __init__(self, graph_widget, parent=None):
@@ -71,6 +72,7 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.roi = pg.LinearRegionItem()
     self.roi.setZValue(10)  
+    self.roi.hide()
     self.graph.addItem(self.roi)
     
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
@@ -93,8 +95,10 @@ class GraphWidget(QtWidgets.QWidget):
     self.isPaused = False
   
     self.signalListWidget = QtWidgets.QListWidget()
-    self.signalListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
+    self.signalListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+    self.signalListWidget.itemChanged.connect(self.update_play_button_state)
     self.signalLayout.addWidget(self.signalListWidget)
+
 
     self.loadSignalButton = QtWidgets.QPushButton("Load Signal")
     self.loadSignalButton.clicked.connect(self.load_signal)
@@ -128,7 +132,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.signalLayout.addWidget(self.reportButton)
     
     self.playPauseButton.setEnabled(False)
-    self.signalListWidget.itemChanged.connect(self.update_play_button_state)
 
     self.selectedColor = (255, 0, 0)  
     self.defaultSpeed = 10  
@@ -141,17 +144,15 @@ class GraphWidget(QtWidgets.QWidget):
     self.timer.setInterval(100)  
     self.timer.timeout.connect(self.update)
     self.timer.start()
-    
-    self.playPauseButton.setEnabled(False)
-    self.signalListWidget.itemChanged.connect(self.update_play_button_state)
 
-    self.signalListWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
-    self.signalListWidget.customContextMenuRequested.connect(self.show_context_menu)
-    
-    self.selectedColor = (255, 0, 0)  
-    self.defaultSpeed = 10  
+    self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+    self.mainSlider.setMinimum(0)
+    self.mainSlider.setMaximum(100)
+    self.mainSlider.setValue(0)
+    self.mainSlider.valueChanged.connect(self.slider_moved)
+    self.signalLayout.addWidget(self.mainSlider)
 
-    self.sliders = {}
+    self.currentSignalIndex = None 
 
   def on_roi_changed(self):
     self.selected_range = self.roi.getRegion()
@@ -187,69 +188,72 @@ class GraphWidget(QtWidgets.QWidget):
         self.report_dialog.move(parent_pos.x() + self.width(), parent_pos.y())
     self.report_dialog.show()
   def load_signal(self):
-    filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, None, None, "CSV Files (*.csv)")
-    if filePath:
-        time, amplitude = [], []
-        with open(filePath, 'r') as csvfile:
-            csv_reader = csv.reader(csvfile, delimiter=',')
-            for row in csv_reader:
-                if len(row) == 2:
-                    time.append(float(row[0]))
-                    amplitude.append(float(row[1]))
-        
-        time = np.array(time)
-        amplitude = np.array(amplitude)
-        self.signals.append((time, amplitude))
-        signalName = (filePath.split('/')[-1]  ).split('.')[0]
-        item = QtWidgets.QListWidgetItem(signalName)
-        item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
-        item.setCheckState(QtCore.Qt.CheckState.Unchecked)
-        self.signalListWidget.addItem(item)
-        
-        self.currentPositions.append(0)  
-        self.signalColors.append(self.selectedColor)  
-        self.signalSpeeds.append(self.defaultSpeed)  
+        filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, None, None, "CSV Files (*.csv)")
+        if filePath:
+            time, amplitude = [], []
+            with open(filePath, 'r') as csvfile:
+                csv_reader = csv.reader(csvfile, delimiter=',')
+                for row in csv_reader:
+                    if len(row) == 2:
+                        time.append(float(row[0]))
+                        amplitude.append(float(row[1]))
 
-        self.update_play_button_state()
+            time = np.array(time)
+            amplitude = np.array(amplitude)
+            self.signals.append((time, amplitude))
+            signalName = (filePath.split('/')[-1]).split('.')[0]
+            item = QtWidgets.QListWidgetItem(signalName)
+            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
+            item.setCheckState(QtCore.Qt.CheckState.Checked)
+            self.signalListWidget.addItem(item)
 
-        # self.graph.setXRange(min(time), max(time))
-        pen = pg.mkPen(color=self.selectedColor, width=2)
-        line_item = self.graph.plot(time, amplitude, pen=pen)
-        self.signalsLines.append(line_item)
-        self.legend.addItem(line_item, signalName)
+            self.currentPositions.append(0)  
+            self.signalColors.append(self.selectedColor)  
+            self.signalSpeeds.append(self.defaultSpeed)  
 
-        x_padding = (max(time) - min(time)) * 0.05  # Add 5% padding
-        y_padding = (max(amplitude) - min(amplitude)) * 0.05  # Add 5% padding
+            self.update_play_button_state()
 
-        self.graph.setXRange(min(time) - x_padding, max(time) + x_padding, padding=0)
-        self.graph.setYRange(min(amplitude) - y_padding, max(amplitude) + y_padding, padding=0)
+            pen = pg.mkPen(color=self.selectedColor, width=2)
+            line_item = self.graph.plot(time, amplitude, pen=pen)
+            self.signalsLines.append(line_item)
+            self.legend.addItem(line_item, signalName)
 
-        self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
-        yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
+            x_padding = (max(time) - min(time)) * 0.05  
+            y_padding = (max(amplitude) - min(amplitude)) * 0.05  
 
-        self.add_slider_for_signal(len(self.signals) - 1)
-  def add_slider_for_signal(self, index):
-    slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-    slider.setMinimum(0)
-    slider.setMaximum(100)
-    slider.setValue(0)
-    slider.valueChanged.connect(lambda value, idx=index: self.slider_moved(idx, value))
-    self.signalLayout.addWidget(slider)
-    self.sliders[index] = slider
-  def slider_moved(self, index, value):
-    # Update the current position based on the slider value
-    self.currentPositions[index] = int(value / 100 * len(self.signals[index][0]))
+            self.graph.setXRange(min(time) - x_padding, max(time) + x_padding, padding=0)
+            self.graph.setYRange(min(amplitude) - y_padding, max(amplitude) + y_padding, padding=0)
 
-    # Get the signal data and the current position
-    time, amplitude = self.signals[index]
-    current_pos = self.currentPositions[index]
+            self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
+                                 yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
 
-    # Update the signal display on the graph immediately
-    if self.signalsLines[index] is None:
-        pen = pg.mkPen(color=self.signalColors[index], width=2)
-        self.signalsLines[index] = self.graph.plot(time[:current_pos], amplitude[:current_pos], pen=pen)
-    else:
-        self.signalsLines[index].setData(time[:current_pos], amplitude[:current_pos]) 
+  def slider_moved(self, value):
+      for index in range(self.signalListWidget.count()):
+          item = self.signalListWidget.item(index)
+          if item.isSelected(): 
+              self.currentSignalIndex = index 
+              self.currentPositions[index] = int(value / 100 * len(self.signals[index][0]))
+              time, amplitude = self.signals[index]
+              current_pos = self.currentPositions[index]
+
+              if self.signalsLines[index] is None:
+                  pen = pg.mkPen(color=self.signalColors[index], width=2)
+                  self.signalsLines[index] = self.graph.plot(time[:current_pos], amplitude[:current_pos], pen=pen)
+              else:
+                  self.signalsLines[index].setData(time[:current_pos], amplitude[:current_pos])
+             
+              self.signalsLines[index].setPen(pg.mkPen(color=self.signalColors[index], width=2))
+              break 
+
+  def select_color(self):
+      color = QtWidgets.QColorDialog.getColor()
+      if color.isValid():
+          self.selectedColor = (color.red(), color.green(), color.blue())
+          for item in self.signalListWidget.selectedItems():
+              index = self.signalListWidget.row(item)
+              self.signalColors[index] = self.selectedColor  
+              if index < len(self.signalsLines):  
+                  self.signalsLines[index].setPen(pg.mkPen(color=self.selectedColor, width=2))
 
   def select_color(self):
     color = QtWidgets.QColorDialog.getColor()
@@ -269,25 +273,24 @@ class GraphWidget(QtWidgets.QWidget):
         return  
     while len(self.signalsLines) < len(self.signals):
         self.signalsLines.append(None)  
-
+    
     for index in range(self.signalListWidget.count()):
-      item = self.signalListWidget.item(index)
-      
-      if item.checkState() == QtCore.Qt.CheckState.Checked:
-        time, amplitude = self.signals[index]  
-        current_pos = self.currentPositions[index]  
-        if current_pos >= len(time):
-            continue  
-        new_pos = min(current_pos + self.signalSpeeds[index], len(time))
-        if self.signalsLines[index] is None:
-            pen = pg.mkPen(color=self.signalColors[index], width=2)
-            self.signalsLines[index] = self.graph.plot(time[:new_pos], amplitude[:new_pos], pen=pen)
-        else:
-            self.signalsLines[index].setData(time[:new_pos], amplitude[:new_pos])
-        self.currentPositions[index] = new_pos
+        item = self.signalListWidget.item(index)
+        
+        if item.checkState() == QtCore.Qt.CheckState.Checked:
+            time, amplitude = self.signals[index]
+            current_pos = self.currentPositions[index]
+            if current_pos < len(time):
+                new_pos = min(current_pos + self.signalSpeeds[index], len(time))
+                if self.signalsLines[index] is None:
+                    pen = pg.mkPen(color=self.signalColors[index], width=2)
+                    self.signalsLines[index] = self.graph.plot(time[:new_pos], amplitude[:new_pos], pen=pen)
+                else:
+                    self.signalsLines[index].setData(time[:new_pos], amplitude[:new_pos])
 
-        if index in self.sliders and not self.isPaused:
-            self.sliders[index].setValue(int(new_pos / len(time) * 100))
+                self.currentPositions[index] = new_pos
+                if index == self.currentSignalIndex:
+                    self.mainSlider.setValue(int(new_pos / len(time) * 100))
 
   def play_pause(self):
     if self.isPaused:
@@ -362,63 +365,64 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         self.setWindowTitle("Signal Viewer")
         self.setGeometry(100, 100, 1200, 600)
+        self.setMinimumHeight(700)
         
         self.central_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QtWidgets.QVBoxLayout(self.central_widget)
         
-        self.toggleThirdGraphButton = QtWidgets.QPushButton("Show Third Graph")
-        self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
-        self.layout.addWidget(self.toggleThirdGraphButton)
+        # self.toggleThirdGraphButton = QtWidgets.QPushButton("Show Third Graph")
+        # self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
+        # self.layout.addWidget(self.toggleThirdGraphButton)
 
-        self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
-        self.toggleROIButton.clicked.connect(self.toggle_roi)
-        self.layout.addWidget(self.toggleROIButton)
+        # self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
+        # self.toggleROIButton.clicked.connect(self.toggle_roi)
+        # self.layout.addWidget(self.toggleROIButton)
         
         self.graphBox1 = GraphWidget(self)
         self.graphBox2 = GraphWidget(self)
         self.layout.addWidget(self.graphBox1)
         self.layout.addWidget(self.graphBox2)
         
-        self.glue_layout = QtWidgets.QHBoxLayout()
-        self.glue_tool_box_layout = QtWidgets.QVBoxLayout()
-        self.glue_tool_box = QtWidgets.QFrame(self)
-        self.glue_tool_box.setFixedWidth(250)
-        self.glue_tool_box.setMinimumHeight(250)
+        # self.glue_layout = QtWidgets.QHBoxLayout()
+        # self.glue_tool_box_layout = QtWidgets.QVBoxLayout()
+        # self.glue_tool_box = QtWidgets.QFrame(self)
+        # self.glue_tool_box.setFixedWidth(250)
+        # self.glue_tool_box.setMinimumHeight(250)
         
-        self.thirdGraph = pg.PlotWidget()
-        self.thirdGraph.showGrid(x=True, y=True)
-        self.thirdGraph.hide()  
+        # self.thirdGraph = pg.PlotWidget()
+        # self.thirdGraph.showGrid(x=True, y=True)
 
-        self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
-        self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
-        self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
-        self.clearThirdGraphButton.hide()  
+        # self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
+        # self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
+        # self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
+        # self.clearThirdGraphButton.hide()  
         
-        self.glueButton = QtWidgets.QPushButton("Glue Signals")
-        self.glueButton.clicked.connect(self.glue_signals)
-        self.glue_tool_box_layout.addWidget(self.glueButton)
-        self.glueButton.hide()  
+        # self.glueButton = QtWidgets.QPushButton("Glue Signals")
+        # self.glueButton.clicked.connect(self.glue_signals)
+        # self.glue_tool_box_layout.addWidget(self.glueButton)
         
-        self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.gap_slider.setMinimum(-100)  
-        self.gap_slider.setMaximum(100)
-        self.gap_slider.setValue(0)  
-        self.glue_tool_box_layout.addWidget(self.gap_slider)
-        self.gap_slider.hide()  
+        # self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        # self.gap_slider.setMinimum(-100)  
+        # self.gap_slider.setMaximum(100)
+        # self.gap_slider.setValue(0)  
+        # self.glue_tool_box_layout.addWidget(self.gap_slider)
         
-        self.interpolation_dropdown = QtWidgets.QComboBox()
-        self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])  
-        self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
-        self.interpolation_dropdown.hide()  
-        
-        self.glue_tool_box.setLayout(self.glue_tool_box_layout)
-        self.glue_layout.addWidget(self.thirdGraph)
-        self.glue_layout.addWidget(self.glue_tool_box)
-        self.layout.addLayout(self.glue_layout)
+        # self.interpolation_dropdown = QtWidgets.QComboBox()
+        # self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])  
+        # self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
 
-        self.graphBox1.roi.show()  
-        self.graphBox2.roi.show()
+        # self.thirdGraph_container = QtWidgets.QFocusFrame()
+        # thirdGraph_layout = QtWidgets.QHBoxLayout()
+        # self.thirdGraph_container.setLayout(thirdGraph_layout)
+        # self.thirdGraph_container.layout().addWidget(self.thirdGraph)
+        # self.glue_tool_box.setLayout(self.glue_tool_box_layout)
+        # self.thirdGraph_container.layout().addWidget(self.glue_tool_box)
+        # self.glue_layout.addWidget(self.thirdGraph_container)
+        
+        # self.layout.addLayout(self.glue_layout)
+
+        
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
@@ -426,19 +430,11 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.timer.start()
 
     def toggle_third_graph(self):
-        if self.thirdGraph.isVisible():
-            self.thirdGraph.hide()
-            self.clearThirdGraphButton.hide()
-            self.gap_slider.hide()
-            self.glueButton.hide()
-            self.interpolation_dropdown.hide()
+        if self.thirdGraph_container.isVisible():
+            self.thirdGraph_container.hide()
             self.toggleThirdGraphButton.setText("Show Third Graph")
         else:
-            self.thirdGraph.show()
-            self.clearThirdGraphButton.show()
-            self.gap_slider.show()
-            self.glueButton.show()
-            self.interpolation_dropdown.show()
+            self.thirdGraph_container.show()
             self.toggleThirdGraphButton.setText("Hide Third Graph")
 
     def toggle_roi(self):
