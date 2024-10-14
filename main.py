@@ -1,4 +1,7 @@
 from PyQt6.QtPrintSupport import QPrinter
+from nonRectangle import RadarPlotWidget
+import pandas as pd
+import matplotlib.pyplot as plt
 from PyQt6 import QtWidgets, QtCore,QtGui
 import scipy.interpolate as interp
 from PyQt6.QtCore import Qt
@@ -184,6 +187,8 @@ class GraphWidget(QtWidgets.QWidget):
     self.zoomOutButton.setIcon(zooOutIcon)
     self.zoomOutButton.clicked.connect(self.zoom_out)
     self.controlLayout2.addWidget(self.zoomOutButton)
+
+    ## hiden button
 
     colorIcon = QtGui.QIcon()
     colorIcon.addPixmap(QtGui.QPixmap("./control/pics/bxs--color-fill.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -431,9 +436,7 @@ class GraphWidget(QtWidgets.QWidget):
         self.graph.setXRange(*new_x_range, padding=0)
         self.graph.setYRange(*new_y_range, padding=0)
 
-from nonRectangle import RadarPlotWidget
-import pandas as pd
-import matplotlib.pyplot as plt
+
 
 class SecondPage(QtWidgets.QWidget):
     def __init__(self, parent):
@@ -736,7 +739,6 @@ class SignalViewer(QtWidgets.QMainWindow):
         # Clear Third Graph Button
         self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
         self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
-        self.clearThirdGraphButton.hide()
         self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
 
         # Glue Signals Button
@@ -839,22 +841,22 @@ class SignalViewer(QtWidgets.QMainWindow):
     def process_gap_or_overlap(self, subsignal1, subsignal2, gap, interpolation_order):
       if gap > 0:
           
-          interpolation_range = np.linspace(0, gap - 1, gap)
-          if interpolation_order == "Linear":
-              gap_signal = np.linspace(subsignal1[-1], subsignal2[0], gap)
-          elif interpolation_order == "Cubic":
-              if len(subsignal1) >= 2 and len(subsignal2) >= 2:
-                  x_points = [-1, 0, 1, 2]  
-                  y_points = [subsignal1[-2], subsignal1[-1], subsignal2[0], subsignal2[1]]
-                  cubic_interp = interp.interp1d(x_points, y_points, kind='cubic')
-                  gap_signal = cubic_interp(np.linspace(0, 1, gap))  
-              else:
-                  print("Not enough data points for cubic interpolation.")
-                  return None  
-          elif interpolation_order == "Nearest":
-              gap_signal = interp.interp1d([0, gap - 1], [subsignal1[-1], subsignal2[0]], kind='nearest')(interpolation_range)
+        interpolation_range = np.linspace(0, gap - 1, gap)
+        if interpolation_order == "Linear":
+            gap_signal = np.linspace(subsignal1[-1], subsignal2[0], gap)
+        elif interpolation_order == "Cubic":
+            if len(subsignal1) >= 2 and len(subsignal2) >= 2:
+                x_points = [-1, 0, 1, 2]  
+                y_points = [subsignal1[-2], subsignal1[-1], subsignal2[0], subsignal2[1]]
+                cubic_interp = interp.interp1d(x_points, y_points, kind='cubic')
+                gap_signal = cubic_interp(np.linspace(0, 1, gap))  
+            else:
+                print("Not enough data points for cubic interpolation.")
+                return None  
+        elif interpolation_order == "Nearest":
+            gap_signal = interp.interp1d([0, gap - 1], [subsignal1[-1], subsignal2[0]], kind='nearest')(interpolation_range)
 
-          glued_signal = np.concatenate([subsignal1, gap_signal, subsignal2])
+        glued_signal = np.concatenate([subsignal1, gap_signal, subsignal2])
 
       else:
           overlap = abs(gap)
