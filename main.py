@@ -701,6 +701,7 @@ class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.report_dialog = None
         self.setWindowTitle("Signal Viewer")
         self.setGeometry(100, 100, 1000, 600)
 
@@ -778,6 +779,16 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.glue_tool_box.setFixedWidth(250)
         self.glue_tool_box.setMinimumHeight(250)
 
+        # Report for third graph
+        reportIcon = QtGui.QIcon()
+        reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,
+                             QtGui.QIcon.State.On)
+        self.thirdGraphReportButton = QtWidgets.QPushButton()
+        self.thirdGraphReportButton.setFixedWidth(50)
+        self.thirdGraphReportButton.setIcon(reportIcon)
+        self.thirdGraphReportButton.clicked.connect(self.open_report_dialog)
+        self.glue_tool_box_layout.addWidget(self.thirdGraphReportButton)
+
         # Clear Third Graph Button
         self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
         self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
@@ -799,6 +810,7 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.interpolation_dropdown = QtWidgets.QComboBox()
         self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])
         self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
+        self.glue_tool_box_layout.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
 
         # Third Graph
         self.thirdGraph = pg.PlotWidget()
@@ -806,18 +818,17 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         # Third Graph Container
         self.thirdGraph_container = QtWidgets.QFrame(self)
-        thirdGraph_layout = QtWidgets.QHBoxLayout()
-        thirdGraph_layout.setSpacing(20)
-        self.thirdGraph_container.setLayout(thirdGraph_layout)
+        self.thirdGraph_layout = QtWidgets.QHBoxLayout()
+        self.thirdGraph_layout.setSpacing(20)
+        self.thirdGraph_container.setLayout(self.thirdGraph_layout)
         self.thirdGraph_container.layout().addWidget(self.thirdGraph)
 
         # Glue Tool Box Layout
         self.glue_tool_box.setLayout(self.glue_tool_box_layout)
         self.thirdGraph_container.layout().addWidget(self.glue_tool_box)
         self.glue_layout.addWidget(self.thirdGraph_container)
-
         self.thirdGraph_container.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.thirdGraph_container.setVisible(False)
+        self.thirdGraph_container.setVisible(True)
 
         self.first_page_layout.addWidget(self.glueFrame)
         self.stack.addWidget(self.first_page)  # Add first page to the stack
@@ -837,17 +848,24 @@ class SignalViewer(QtWidgets.QMainWindow):
 
     def show_first_page(self):
         self.stack.setCurrentWidget(self.first_page)
-
+    def open_report_dialog(self):
+        if self.report_dialog is None:
+            self.report_dialog = ReportDialog(self)
+            parent_pos = self.mapToGlobal(self.pos())
+            self.report_dialog.move(parent_pos.x() + self.width(), parent_pos.y())
+        self.report_dialog.show()
     def toggle_third_graph(self):
         if self.thirdGraph_container.isVisible():
             self.thirdGraph_container.setVisible(False)
+            self.first_page_layout.removeWidget(self.glueFrame)
             self.toggleThirdGraphButton.setText("Show Third Graph")
             self.setFixedSize(self.original_width, self.original_height)
         else:
+            self.first_page_layout.addWidget(self.glueFrame)
             self.thirdGraph_container.setVisible(True)
             self.toggleThirdGraphButton.setText("Hide Third Graph")
-            self.setFixedSize(self.original_width , self.original_height+300)
-        
+            self.setFixedSize(self.original_width, self.original_height + 300)
+
 
     def toggle_roi(self):
         if self.graphBox1.roi.isVisible() and self.graphBox2.roi.isVisible():
