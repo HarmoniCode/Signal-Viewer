@@ -1,6 +1,7 @@
 from PyQt6.QtPrintSupport import QPrinter
 from PyQt6 import QtWidgets, QtCore,QtGui
 import scipy.interpolate as interp
+from PyQt6.QtCore import Qt
 import pyqtgraph as pg
 import numpy as np
 import sys
@@ -429,20 +430,228 @@ class GraphWidget(QtWidgets.QWidget):
 
         self.graph.setXRange(*new_x_range, padding=0)
         self.graph.setYRange(*new_y_range, padding=0)
+
+from nonRectangle import RadarPlotWidget
+import pandas as pd
+import matplotlib.pyplot as plt
+
+class SecondPage(QtWidgets.QWidget):
+    def __init__(self, parent):
+        self.parent = parent
+        super().__init__()
+        self.initUI()
+        
+
+    def initUI(self):
+        self.setWindowTitle('Dual Radar Plot Viewer')
+
+        self.radar_plot1 = RadarPlotWidget()
+        self.radar_plot2 = RadarPlotWidget()
+
+        self.timer1 = QtCore.QTimer(self)
+        self.timer1.timeout.connect(lambda: self.transition_plot(self.radar_plot1, 1))
+        self.timer2 = QtCore.QTimer(self)
+        self.timer2.timeout.connect(lambda: self.transition_plot(self.radar_plot2, 2))
+
+        self.init_plot_vars(1)
+        self.init_plot_vars(2)
+
+        radar_layout = QtWidgets.QHBoxLayout()
+        radar_layout.addWidget(self.radar_plot1)
+        radar_layout.addWidget(self.radar_plot2)
+
+        controls1 = self.create_controls(self.radar_plot1, self.timer1, plot_num=1)
+
+        controls2 = self.create_controls(self.radar_plot2, self.timer2, plot_num=2)
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.addLayout(radar_layout)
+        main_layout.addLayout(controls1)
+        main_layout.addLayout(controls2)
+
+        self.back_to_first_page_button = QtWidgets.QPushButton("Back to First Page")
+        self.back_to_first_page_button.clicked.connect(self.back_to_first_page)
+        main_layout.addWidget(self.back_to_first_page_button)
+
+        self.setLayout(main_layout)
+
+    def init_plot_vars(self, plot_num):
+        setattr(self, f'row_idx{plot_num}', 0)
+        setattr(self, f'interpolation_steps{plot_num}', 30)
+        setattr(self, f'current_step{plot_num}', 0)
+        setattr(self, f'is_playing{plot_num}', False)
+        setattr(self, f'timer_interval{plot_num}', 50)
+
+    def create_controls(self, radar_plot, timer, plot_num):
+
+        control_layout = QtWidgets.QVBoxLayout()
+
+        upload_button = QtWidgets.QPushButton(f'Upload CSV for Plot {plot_num}')
+        upload_button.clicked.connect(lambda: self.load_csv(radar_plot, plot_num))
+        control_layout.addWidget(upload_button)
+
+        fill_color_button = QtWidgets.QPushButton(f'Choose Fill Color for Plot {plot_num}')
+        fill_color_button.clicked.connect(lambda: self.choose_fill_color(radar_plot))
+        control_layout.addWidget(fill_color_button)
+
+        line_color_button = QtWidgets.QPushButton(f'Choose Line Color for Plot {plot_num}')
+        line_color_button.clicked.connect(lambda: self.choose_line_color(radar_plot))
+        control_layout.addWidget(line_color_button)
+
+        cine_control_layout = QtWidgets.QHBoxLayout()
+        backward_button = QtWidgets.QPushButton('Backward')
+        backward_button.clicked.connect(lambda: self.backward_plot(radar_plot, plot_num))
+        cine_control_layout.addWidget(backward_button)
+
+        play_button = QtWidgets.QPushButton('Play')
+        play_button.clicked.connect(lambda: self.play_plot(timer, plot_num))
+        cine_control_layout.addWidget(play_button)
+
+        forward_button = QtWidgets.QPushButton('Forward')
+        forward_button.clicked.connect(lambda: self.forward_plot(radar_plot, plot_num))
+        cine_control_layout.addWidget(forward_button)
+
+        pause_button = QtWidgets.QPushButton('Pause')
+        pause_button.clicked.connect(lambda: self.pause_plot(timer, plot_num))
+        cine_control_layout.addWidget(pause_button)
+
+        stop_button = QtWidgets.QPushButton('Stop')
+        stop_button.clicked.connect(lambda: self.stop_plot(radar_plot, plot_num))
+        cine_control_layout.addWidget(stop_button)
+
+        control_layout.addLayout(cine_control_layout)
+
+        speed_layout = QtWidgets.QHBoxLayout()
+        minspeed_label = QtWidgets.QLabel('4 FPS')
+        maxspeed_label = QtWidgets.QLabel('80 FPS')
+        speed_slider = QtWidgets.QSlider(Qt.Orientation.Horizontal)
+        speed_slider.setMinimum(10)
+        speed_slider.setMaximum(200)
+        speed_slider.setValue(150)
+        speed_slider.setTickPosition(QtWidgets.QSlider.TickPosition.TicksBelow)
+        speed_slider.setTickInterval(20)
+        speed_slider.valueChanged.connect(lambda: self.change_speed(timer, plot_num, speed_slider))
+        speed_layout.addWidget(minspeed_label)
+        speed_layout.addWidget(speed_slider)
+        speed_layout.addWidget(maxspeed_label)
+        control_layout.addLayout(speed_layout)
+
+        return control_layout
+
+    def choose_fill_color(self, radar_plot):
+        color = QtWidgets.QColorDialog.getColor()
+        if color.isValid():
+            radar_plot.update_fill_color(color.name())
+
+    def choose_line_color(self, radar_plot):
+        color = QtWidgets.QColorDialog.getColor()
+        if color.isValid():
+            radar_plot.update_line_color(color.name())
+
+    def load_csv(self, radar_plot, plot_num):
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)")
+        if file_name:
+            csv_data = pd.read_csv(file_name)
+            if csv_data.shape[1] < 3:
+                raise ValueError("CSV file must contain at least 3 columns.")
+
+            setattr(self, f'csv_data{plot_num}', csv_data)
+
+            categories = csv_data.columns.tolist()
+            row_idx = getattr(self, f'row_idx{plot_num}')
+            current_data = np.array(csv_data.iloc[row_idx])
+            radar_plot.update_plot(current_data, categories)
+
+    def change_speed(self, timer, plot_num, slider):
+        speed_value = slider.value()
+        timer_interval = 200 - speed_value
+        setattr(self, f'timer_interval{plot_num}', timer_interval)
+        if getattr(self, f'is_playing{plot_num}'):
+            timer.start(timer_interval)
+
+    def play_plot(self, timer, plot_num):
+        setattr(self, f'is_playing{plot_num}', True)
+        timer.start(getattr(self, f'timer_interval{plot_num}'))
+
+    def pause_plot(self, timer, plot_num):
+        setattr(self, f'is_playing{plot_num}', False)
+        timer.stop()
+
+    def stop_plot(self, radar_plot, plot_num):
+        timer = getattr(self, f'timer{plot_num}')
+        timer.stop()
+        self.init_plot_vars(plot_num)
+        radar_plot.ax.clear()
+        radar_plot.draw()
+
+    def backward_plot(self, radar_plot, plot_num):
+        row_idx = getattr(self, f'row_idx{plot_num}')
+        csv_data = getattr(self, f'csv_data{plot_num}')
+        if row_idx > 0:
+            row_idx -= 1
+        setattr(self, f'row_idx{plot_num}', row_idx)
+        current_data = np.array(csv_data.iloc[row_idx])
+        categories = csv_data.columns.tolist()
+        radar_plot.update_plot(current_data, categories)
+
+    def forward_plot(self, radar_plot, plot_num):
+        row_idx = getattr(self, f'row_idx{plot_num}')
+        csv_data = getattr(self, f'csv_data{plot_num}')
+        row_idx = (row_idx + 1) % len(csv_data)
+        setattr(self, f'row_idx{plot_num}', row_idx)
+        current_data = np.array(csv_data.iloc[row_idx])
+        categories = csv_data.columns.tolist()
+        radar_plot.update_plot(current_data, categories)
+
+    def interpolate_data(self, current_data, next_data, current_step, interpolation_steps):
+        factor = current_step / interpolation_steps
+        interpolated_data = (1 - factor) * current_data + factor * next_data
+        return interpolated_data
+
+    def transition_plot(self, radar_plot, plot_num):
+        current_step = getattr(self, f'current_step{plot_num}')
+        interpolation_steps = getattr(self, f'interpolation_steps{plot_num}')
+        row_idx = getattr(self, f'row_idx{plot_num}')
+        csv_data = getattr(self, f'csv_data{plot_num}')
+        categories = csv_data.columns.tolist()
+
+        current_data = np.array(csv_data.iloc[row_idx])
+        next_data = np.array(csv_data.iloc[(row_idx + 1) % len(csv_data)])
+
+        interpolated_data = self.interpolate_data(current_data, next_data, current_step, interpolation_steps)
+        radar_plot.update_plot(interpolated_data, categories)
+
+        if current_step < interpolation_steps:
+            current_step += 1
+            setattr(self, f'current_step{plot_num}', current_step)
+        else:
+            setattr(self, f'row_idx{plot_num}', (row_idx + 1) % len(csv_data))
+            setattr(self, f'current_step{plot_num}', 0)
+
+
+    def back_to_first_page(self):
+        self.parent.show_first_page()
 class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Signal Viewer")
         self.setGeometry(100, 100, 1000, 600)
-        self.setMinimumHeight(615)
 
         self.original_height = 615
         self.original_width = 1000
 
         self.central_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.central_widget)
+
+        # Use QStackedWidget to switch between pages
+        self.stack = QtWidgets.QStackedWidget()
         self.verticalBody = QtWidgets.QVBoxLayout(self.central_widget)
+        self.verticalBody.addWidget(self.stack)
+
+        # First page with graphs and controls
+        self.first_page = QtWidgets.QWidget()
+        self.first_page_layout = QtWidgets.QVBoxLayout(self.first_page)
 
         # Control Layout
         self.controlGraphFrame = QtWidgets.QFrame(self)
@@ -461,6 +670,11 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
         self.toggleROIButton.clicked.connect(self.toggle_roi)
         self.controlLayout1.addWidget(self.toggleROIButton)
+
+        # Non-Rectangle Button to go to the Second Page
+        self.NonRegtangle = QtWidgets.QPushButton("Non-Rectangle")
+        self.NonRegtangle.clicked.connect(self.show_second_page)  # Connect to the second page
+        self.controlLayout1.addWidget(self.NonRegtangle)
 
         # Spacer
         self.controlLayout1.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
@@ -486,13 +700,13 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.graphLayout2.addWidget(self.graphBox2)
         self.graphlayout.addWidget(self.graphFrame2)
 
-        self.verticalBody.addWidget(self.controlGraphFrame)
+        self.first_page_layout.addWidget(self.controlGraphFrame)
 
         # Glue Layout
         self.glueFrame = QtWidgets.QFrame(self)
+
         self.glueFrame.setMinimumHeight(300)
         self.glue_layout = QtWidgets.QHBoxLayout(self.glueFrame)
-
         self.glue_tool_box_layout = QtWidgets.QVBoxLayout()
         self.glue_tool_box = QtWidgets.QFrame(self)
         self.glue_tool_box.setFixedWidth(250)
@@ -540,13 +754,24 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.thirdGraph_container.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.thirdGraph_container.setVisible(False)
 
-        self.verticalBody.addWidget(self.glueFrame)
+        self.first_page_layout.addWidget(self.glueFrame)
+        self.stack.addWidget(self.first_page)  # Add first page to the stack
 
         # Timer
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.update_graphs)
         self.timer.start()
+
+        # Create instance of SecondPage and add to the stack
+        self.second_page = SecondPage(self)
+        self.stack.addWidget(self.second_page)  # Add second page to the stack
+
+    def show_second_page(self):
+        self.stack.setCurrentWidget(self.second_page)
+
+    def show_first_page(self):
+        self.stack.setCurrentWidget(self.first_page)
 
     def toggle_third_graph(self):
         if self.thirdGraph_container.isVisible():
