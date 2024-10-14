@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QSlider, QHBoxLayout, \
-    QFileDialog, QLabel, QColorDialog
+    QFileDialog, QLabel, QColorDialog,QFrame
+from PyQt6 import QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt6.QtCore import QTimer, Qt
 
@@ -16,6 +17,14 @@ class RadarPlotWidget(FigureCanvas):
         self.ax.set_ylim(0, 5)
         self.fill_color = '#b2d1f0'  # Default fill color
         self.line_color = '#287fd5'  # Default line color
+
+        self.frame = QFrame()
+        self.frame.setFrameShape(QFrame.Shape.Box)  # Use QFrame.Shape.Box for PyQt6
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)  # Use QFrame.Shadow.Raised for PyQt6
+        self.frame.setLineWidth(50)  # Width of the border
+        self.frame.setStyleSheet("border-color: black;")  # Color of the border
+        self.frame.setLayout(QtWidgets.QVBoxLayout())
+        self.frame.layout().addWidget(self)
 
     def update_fill_color(self, fill_color):
         self.fill_color = fill_color

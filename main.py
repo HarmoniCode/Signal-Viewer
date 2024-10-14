@@ -17,6 +17,8 @@ class ReportDialog(QtWidgets.QDialog):
         self.setWindowTitle("Create Report")
         self.setMinimumSize(500, 500)
 
+        
+
         self.layout = QtWidgets.QVBoxLayout(self)
         self.textEdit = QtWidgets.QTextEdit()
         default_font = QtGui.QFont()
@@ -114,6 +116,7 @@ class GraphWidget(QtWidgets.QWidget):
     self.signalLayout.addLayout(self.controlLayout3)
 
     self.signalListWidget = QtWidgets.QListWidget()
+    
     self.signalListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
     self.signalListWidget.itemChanged.connect(self.update_play_button_state)
     self.signalLayout.addWidget(self.signalListWidget)
@@ -138,9 +141,7 @@ class GraphWidget(QtWidgets.QWidget):
     self.controlLayout1.setContentsMargins(0, 0, 0, 0)  # Remove margins for control layout
 
     self.pauseIcon = QtGui.QIcon()
-    self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),
-                            QtGui.QIcon.Mode.Normal,
-                            QtGui.QIcon.State.On)
+    self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.playIcon = QtGui.QIcon()
     self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.playPauseButton = QtWidgets.QPushButton()
@@ -152,6 +153,7 @@ class GraphWidget(QtWidgets.QWidget):
     replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.replayButton = QtWidgets.QPushButton()
     self.replayButton.setIcon(replayIcon)
+    self.replayButton.clicked.connect(self.rewind)
     self.controlLayout1.addWidget(self.replayButton)
 
     clearIcon = QtGui.QIcon()
@@ -391,6 +393,21 @@ class GraphWidget(QtWidgets.QWidget):
                 self.currentPositions[index] = 0
                 # Remove from legend
                 self.legend.removeItem(item.text())
+        if not self.isPaused:
+            self.play_pause()
+  def rewind(self):
+        selected_items = self.signalListWidget.selectedItems()
+        for item in selected_items:
+            index = self.signalListWidget.row(item)
+
+            if index < len(self.signalsLines) and self.signalsLines[index] is not None:
+                self.graph.removeItem(self.signalsLines[index])  
+                self.signalsLines[index] = None  
+                self.currentPositions[index] = 0
+                # Remove from legend
+                self.legend.removeItem(item.text())
+
+
 
   def delete_selected_signal(self):
         selected_items = self.signalListWidget.selectedItems()
@@ -438,7 +455,7 @@ class GraphWidget(QtWidgets.QWidget):
 
 
 
-class SecondPage(QtWidgets.QWidget):
+class NonRecPage(QtWidgets.QWidget):
     def __init__(self, parent):
         self.parent = parent
         super().__init__()
@@ -510,36 +527,61 @@ class SecondPage(QtWidgets.QWidget):
 
         control_layout = QtWidgets.QVBoxLayout()
 
-        upload_button = QtWidgets.QPushButton(f'Upload CSV for Plot {plot_num}')
+        controlBox1 = QtWidgets.QHBoxLayout()
+
+        upload_button = QtWidgets.QPushButton(f' Upload CSV')
+        upload_button.setMinimumHeight(30)
+        self.uploadIcon = QtGui.QIcon()
+        self.uploadIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--upload.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        upload_button.setIcon(self.uploadIcon)
         upload_button.clicked.connect(lambda: self.load_csv(radar_plot, plot_num))
-        control_layout.addWidget(upload_button)
+        controlBox1.addWidget(upload_button)
 
-        fill_color_button = QtWidgets.QPushButton(f'Choose Fill Color for Plot {plot_num}')
+        fill_color_button = QtWidgets.QPushButton(f' Fill Color  {plot_num}')
+        fill_color_button.setMinimumHeight(30)
         fill_color_button.clicked.connect(lambda: self.choose_fill_color(radar_plot))
-        control_layout.addWidget(fill_color_button)
+        controlBox1.addWidget(fill_color_button)
 
-        line_color_button = QtWidgets.QPushButton(f'Choose Line Color for Plot {plot_num}')
+        line_color_button = QtWidgets.QPushButton(f' Line Color  {plot_num}')
+        line_color_button.setMinimumHeight(30)
         line_color_button.clicked.connect(lambda: self.choose_line_color(radar_plot))
-        control_layout.addWidget(line_color_button)
+        controlBox1.addWidget(line_color_button)
+        control_layout.addLayout(controlBox1)
 
         cine_control_layout = QtWidgets.QHBoxLayout()
-        backward_button = QtWidgets.QPushButton('Backward')
+        backward_button = QtWidgets.QPushButton()
+        self.backwardIcon = QtGui.QIcon()
+        self.backwardIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--backward.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        backward_button.setIcon(self.backwardIcon)
         backward_button.clicked.connect(lambda: self.backward_plot(radar_plot, plot_num))
         cine_control_layout.addWidget(backward_button)
 
-        play_button = QtWidgets.QPushButton('Play')
+        play_button = QtWidgets.QPushButton()
+        self.playIcon = QtGui.QIcon()
+        self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        play_button.setIcon(self.playIcon)
+
         play_button.clicked.connect(lambda: self.play_plot(timer, plot_num))
         cine_control_layout.addWidget(play_button)
 
-        forward_button = QtWidgets.QPushButton('Forward')
+        forward_button = QtWidgets.QPushButton()
+        self.forwardIcon = QtGui.QIcon()
+        self.forwardIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--forward.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        forward_button.setIcon(self.forwardIcon)
         forward_button.clicked.connect(lambda: self.forward_plot(radar_plot, plot_num))
         cine_control_layout.addWidget(forward_button)
 
-        pause_button = QtWidgets.QPushButton('Pause')
+        pause_button = QtWidgets.QPushButton()
+        self.pauseIcon = QtGui.QIcon()
+        self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        pause_button.setIcon(self.pauseIcon)
         pause_button.clicked.connect(lambda: self.pause_plot(timer, plot_num))
         cine_control_layout.addWidget(pause_button)
 
-        stop_button = QtWidgets.QPushButton('Stop')
+        stop_button = QtWidgets.QPushButton()
+        self.replayIcon = QtGui.QIcon()
+        self.replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        stop_button.setIcon(self.replayIcon)
         stop_button.clicked.connect(lambda: self.stop_plot(radar_plot, plot_num))
         cine_control_layout.addWidget(stop_button)
 
@@ -786,8 +828,8 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_graphs)
         self.timer.start()
 
-        # Create instance of SecondPage and add to the stack
-        self.second_page = SecondPage(self)
+        # Create instance of NonRecPage and add to the stack
+        self.second_page = NonRecPage(self)
         self.stack.addWidget(self.second_page)  # Add second page to the stack
 
     def show_second_page(self):
