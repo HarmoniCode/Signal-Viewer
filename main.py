@@ -55,7 +55,10 @@ class ReportDialog(QtWidgets.QDialog):
 class GraphWidget(QtWidgets.QWidget):
   def __init__(self,parent=None):
     super().__init__(parent)
+    
     self.layout = QtWidgets.QHBoxLayout(self)
+    self.layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+    self.layout.setSpacing(20)  # Remove spacing between items
 
     self.graph = pg.PlotWidget()
     self.graph.showGrid(x=True, y=True)
@@ -63,80 +66,77 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.legend = pg.LegendItem(offset=(70, 20))
     self.legend.setParentItem(self.graph.graphicsItem())
-    
+
     self.signalFrame = QtWidgets.QFrame(self)
-    self.signalFrame.setFixedWidth(250)  
-    self.signalFrame.setMinimumHeight(300)  
+    self.signalFrame.setFixedWidth(250)
     self.layout.addWidget(self.signalFrame)
 
     self.roi = pg.LinearRegionItem()
-    self.roi.setZValue(10)  
+    self.roi.setZValue(10)
     self.roi.hide()
+
     self.graph.addItem(self.roi)
-    
+
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
-    
-    
+    self.signalLayout.setContentsMargins(0, 0, 0, 0)  # Remove margins for signal layout
 
+    self.signals = []
+    self.signalsLines = []
+    self.currentPositions = []
+    self.signalColors = []
+    self.signalSpeeds = []
 
-    
-    
-    self.signals = []  
-    self.signalsLines = []  
-    self.currentPositions = []  
-    self.signalColors = []  
-    self.signalSpeeds = []  
-    
     self.isPaused = False
 
     self.controlLayout3 = QtWidgets.QHBoxLayout()
     loadIcon = QtGui.QIcon()
     loadIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--upload.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-    self.loadSignalButton = QtWidgets.QPushButton() 
+    self.loadSignalButton = QtWidgets.QPushButton()
     self.loadSignalButton.setFixedWidth(50)
     self.loadSignalButton.setIcon(loadIcon)
     self.loadSignalButton.clicked.connect(self.load_signal)
     self.controlLayout3.addWidget(self.loadSignalButton)
 
     self.controlLayout3.addSpacerItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
-    
+
     reportIcon = QtGui.QIcon()
     reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.reportButton = QtWidgets.QPushButton()
     self.reportButton.setFixedWidth(50)
     self.reportButton.setIcon(reportIcon)
-    self.reportButton.clicked.connect(self.open_report_dialog) 
+    self.reportButton.clicked.connect(self.open_report_dialog)
     self.controlLayout3.addWidget(self.reportButton)
 
     self.signalLayout.addLayout(self.controlLayout3)
-    
+
     self.signalListWidget = QtWidgets.QListWidget()
     self.signalListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
     self.signalListWidget.itemChanged.connect(self.update_play_button_state)
     self.signalLayout.addWidget(self.signalListWidget)
 
     self.controlLayout1 = QtWidgets.QHBoxLayout()
-    
-    
+    self.controlLayout1.setContentsMargins(0, 0, 0, 0)  # Remove margins for control layout
+
     self.speedPanal = QtWidgets.QHBoxLayout()
     self.speedLabel = QtWidgets.QLabel("Speed:")
     self.speedPanal.addWidget(self.speedLabel)
-    self.controlLayout1.addWidget(self.speedLabel)
+
     self.speedSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-    self.speedSlider.setMinimum(1)  
-    self.speedSlider.setMaximum(100)  
-    self.speedSlider.setValue(10)  
+    self.speedSlider.setMinimum(1)
+    self.speedSlider.setMaximum(100)
+    self.speedSlider.setValue(10)
     self.speedSlider.valueChanged.connect(self.change_speed)
     self.speedPanal.addWidget(self.speedSlider)
     self.signalLayout.addLayout(self.speedPanal)
 
+    # Control Layout for Play/Pause and Other Buttons
+    self.controlLayout1 = QtWidgets.QHBoxLayout()
+    self.controlLayout1.setContentsMargins(0, 0, 0, 0)  # Remove margins for control layout
 
-    self.controlLayout1=QtWidgets.QHBoxLayout()
-    
     self.pauseIcon = QtGui.QIcon()
-    self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"), 
-                        QtGui.QIcon.Mode.Normal, 
-                        QtGui.QIcon.State.On)
+    self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),
+                            QtGui.QIcon.Mode.Normal,
+                            QtGui.QIcon.State.On)
     self.playIcon = QtGui.QIcon()
     self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.playPauseButton = QtWidgets.QPushButton()
@@ -149,7 +149,7 @@ class GraphWidget(QtWidgets.QWidget):
     self.replayButton = QtWidgets.QPushButton()
     self.replayButton.setIcon(replayIcon)
     self.controlLayout1.addWidget(self.replayButton)
-  
+
     clearIcon = QtGui.QIcon()
     clearIcon.addPixmap(QtGui.QPixmap("./control/pics/ic--baseline-clear (1).png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.clearButton = QtWidgets.QPushButton()
@@ -163,13 +163,12 @@ class GraphWidget(QtWidgets.QWidget):
     self.deleteButton.setIcon(deleteIcon)
     self.deleteButton.clicked.connect(self.delete_selected_signal)
     self.controlLayout1.addWidget(self.deleteButton)
-    
+
     self.signalLayout.addLayout(self.controlLayout1)
 
-
-    #*********************************************************************************************#
-
-    self.controlLayout2=QtWidgets.QHBoxLayout()
+    # Control Layout for Zoom
+    self.controlLayout2 = QtWidgets.QHBoxLayout()
+    self.controlLayout2.setContentsMargins(0, 0, 0, 0)  # Remove margins for zoom control
 
     zoomINIcon = QtGui.QIcon()
     zoomINIcon.addPixmap(QtGui.QPixmap("./control/pics/raphael--zoomin.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -193,12 +192,10 @@ class GraphWidget(QtWidgets.QWidget):
     self.controlLayout2.addWidget(self.colorButton)
 
     self.signalLayout.addLayout(self.controlLayout2)
-    
-    
 
-    #*********************************************************************************************#
-
+    # Cine Mode Panel Layout
     self.cineModePanel = QtWidgets.QHBoxLayout()
+    self.cineModePanel.setContentsMargins(0, 0, 0, 0)  # Remove margins for cine mode panel
     self.forwardLabel = QtWidgets.QLabel("Forward")
     self.cineModePanel.addWidget(self.forwardLabel)
     self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
@@ -211,21 +208,19 @@ class GraphWidget(QtWidgets.QWidget):
     self.cineModePanel.addWidget(self.backWard)
     self.signalLayout.addLayout(self.cineModePanel)
 
-    
     self.playPauseButton.setEnabled(False)
 
-    self.selectedColor = (255, 0, 0)  
-    self.defaultSpeed = 10  
+    self.selectedColor = (255, 0, 0)
+    self.defaultSpeed = 10
 
-    self.roi.sigRegionChanged.connect(self.on_roi_changed)  
+    self.roi.sigRegionChanged.connect(self.on_roi_changed)
 
     self.report_dialog = None
-    
+
     self.timer = QtCore.QTimer()
-    self.timer.setInterval(100)  
+    self.timer.setInterval(100)
     self.timer.timeout.connect(self.update)
     self.timer.start()
-
 
     self.currentSignalIndex = None 
 
@@ -439,66 +434,115 @@ class SignalViewer(QtWidgets.QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Signal Viewer")
-        self.setGeometry(100, 100, 1200, 600)
-        self.setMinimumHeight(700)
-        
+        self.setGeometry(100, 100, 1000, 600)
+        self.setMinimumHeight(615)
+
+        self.original_height = 615
+        self.original_width = 1000
+
         self.central_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.central_widget)
-        self.layout = QtWidgets.QVBoxLayout(self.central_widget)
-        
-        # self.toggleThirdGraphButton = QtWidgets.QPushButton("Show Third Graph")
-        # self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
-        # self.layout.addWidget(self.toggleThirdGraphButton)
+        self.verticalBody = QtWidgets.QVBoxLayout(self.central_widget)
 
-        # self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
-        # self.toggleROIButton.clicked.connect(self.toggle_roi)
-        # self.layout.addWidget(self.toggleROIButton)
-        
+        # Control Layout
+        self.controlGraphFrame = QtWidgets.QFrame(self)
+        self.controlGraphFrame.setMinimumHeight(600)
+        self.controlGraphLayout = QtWidgets.QVBoxLayout(self.controlGraphFrame)
+
+        self.controlLayout1 = QtWidgets.QHBoxLayout()
+        self.controlLayout1.setContentsMargins(10, 0, 0, 0)
+
+        # Toggle Third Graph Button
+        self.toggleThirdGraphButton = QtWidgets.QPushButton("Show Third Graph")
+        self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
+        self.controlLayout1.addWidget(self.toggleThirdGraphButton)
+
+        # Toggle ROI Button
+        self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
+        self.toggleROIButton.clicked.connect(self.toggle_roi)
+        self.controlLayout1.addWidget(self.toggleROIButton)
+
+        # Spacer
+        self.controlLayout1.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
+        self.controlGraphLayout.addLayout(self.controlLayout1)
+
+        # Graph Layout
+        self.graphlayout = QtWidgets.QVBoxLayout()
+        self.controlGraphLayout.addLayout(self.graphlayout)
+
+        # First Graph
+        self.graphFrame1 = QtWidgets.QFrame(self)
+        self.graphFrame1.setMinimumHeight(250)
+        self.graphLayout1 = QtWidgets.QVBoxLayout(self.graphFrame1)
         self.graphBox1 = GraphWidget(self)
+        self.graphLayout1.addWidget(self.graphBox1)
+        self.graphlayout.addWidget(self.graphFrame1)
+
+        # Second Graph
+        self.graphFrame2 = QtWidgets.QFrame(self)
+        self.graphFrame2.setMinimumHeight(250)
+        self.graphLayout2 = QtWidgets.QVBoxLayout(self.graphFrame2)
         self.graphBox2 = GraphWidget(self)
-        self.layout.addWidget(self.graphBox1)
-        self.layout.addWidget(self.graphBox2)
-        
-        # self.glue_layout = QtWidgets.QHBoxLayout()
-        # self.glue_tool_box_layout = QtWidgets.QVBoxLayout()
-        # self.glue_tool_box = QtWidgets.QFrame(self)
-        # self.glue_tool_box.setFixedWidth(250)
-        # self.glue_tool_box.setMinimumHeight(250)
-        
-        # self.thirdGraph = pg.PlotWidget()
-        # self.thirdGraph.showGrid(x=True, y=True)
+        self.graphLayout2.addWidget(self.graphBox2)
+        self.graphlayout.addWidget(self.graphFrame2)
 
-        # self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
-        # self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
-        # self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
-        # self.clearThirdGraphButton.hide()  
-        
-        # self.glueButton = QtWidgets.QPushButton("Glue Signals")
-        # self.glueButton.clicked.connect(self.glue_signals)
-        # self.glue_tool_box_layout.addWidget(self.glueButton)
-        
-        # self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        # self.gap_slider.setMinimum(-100)  
-        # self.gap_slider.setMaximum(100)
-        # self.gap_slider.setValue(0)  
-        # self.glue_tool_box_layout.addWidget(self.gap_slider)
-        
-        # self.interpolation_dropdown = QtWidgets.QComboBox()
-        # self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])  
-        # self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
+        self.verticalBody.addWidget(self.controlGraphFrame)
 
-        # self.thirdGraph_container = QtWidgets.QFocusFrame()
-        # thirdGraph_layout = QtWidgets.QHBoxLayout()
-        # self.thirdGraph_container.setLayout(thirdGraph_layout)
-        # self.thirdGraph_container.layout().addWidget(self.thirdGraph)
-        # self.glue_tool_box.setLayout(self.glue_tool_box_layout)
-        # self.thirdGraph_container.layout().addWidget(self.glue_tool_box)
-        # self.glue_layout.addWidget(self.thirdGraph_container)
-        
-        # self.layout.addLayout(self.glue_layout)
+        # Glue Layout
+        self.glueFrame = QtWidgets.QFrame(self)
+        self.glueFrame.setMinimumHeight(300)
+        self.glue_layout = QtWidgets.QHBoxLayout(self.glueFrame)
 
-        
+        self.glue_tool_box_layout = QtWidgets.QVBoxLayout()
+        self.glue_tool_box = QtWidgets.QFrame(self)
+        self.glue_tool_box.setFixedWidth(250)
+        self.glue_tool_box.setMinimumHeight(250)
 
+        # Clear Third Graph Button
+        self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
+        self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
+        self.clearThirdGraphButton.hide()
+        self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
+
+        # Glue Signals Button
+        self.glueButton = QtWidgets.QPushButton("Glue Signals")
+        self.glueButton.clicked.connect(self.glue_signals)
+        self.glue_tool_box_layout.addWidget(self.glueButton)
+
+        # Gap Slider
+        self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.gap_slider.setMinimum(-100)
+        self.gap_slider.setMaximum(100)
+        self.gap_slider.setValue(0)
+        self.glue_tool_box_layout.addWidget(self.gap_slider)
+
+        # Interpolation Dropdown
+        self.interpolation_dropdown = QtWidgets.QComboBox()
+        self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])
+        self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
+
+        # Third Graph
+        self.thirdGraph = pg.PlotWidget()
+        self.thirdGraph.showGrid(x=True, y=True)
+
+        # Third Graph Container
+        self.thirdGraph_container = QtWidgets.QFrame(self)
+        thirdGraph_layout = QtWidgets.QHBoxLayout()
+        thirdGraph_layout.setSpacing(20)
+        self.thirdGraph_container.setLayout(thirdGraph_layout)
+        self.thirdGraph_container.layout().addWidget(self.thirdGraph)
+
+        # Glue Tool Box Layout
+        self.glue_tool_box.setLayout(self.glue_tool_box_layout)
+        self.thirdGraph_container.layout().addWidget(self.glue_tool_box)
+        self.glue_layout.addWidget(self.thirdGraph_container)
+
+        self.thirdGraph_container.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        self.thirdGraph_container.setVisible(False)
+
+        self.verticalBody.addWidget(self.glueFrame)
+
+        # Timer
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.update_graphs)
@@ -506,11 +550,14 @@ class SignalViewer(QtWidgets.QMainWindow):
 
     def toggle_third_graph(self):
         if self.thirdGraph_container.isVisible():
-            self.thirdGraph_container.hide()
+            self.thirdGraph_container.setVisible(False)
             self.toggleThirdGraphButton.setText("Show Third Graph")
+            self.setFixedSize(self.original_width, self.original_height)
         else:
-            self.thirdGraph_container.show()
+            self.thirdGraph_container.setVisible(True)
             self.toggleThirdGraphButton.setText("Hide Third Graph")
+            self.setFixedSize(self.original_width , self.original_height+300)
+        
 
     def toggle_roi(self):
         if self.graphBox1.roi.isVisible() and self.graphBox2.roi.isVisible():
