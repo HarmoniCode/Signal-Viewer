@@ -5,7 +5,6 @@ import pyqtgraph as pg
 import numpy as np
 import sys
 import csv
-from graphWidget_UI import GraphWidget_UI
 
 class ReportDialog(QtWidgets.QDialog):
     def __init__(self, graph_widget, parent=None):
@@ -76,15 +75,11 @@ class GraphWidget(QtWidgets.QWidget):
     self.graph.addItem(self.roi)
     
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
+    
+    
 
-    self.zoomPanel = QtWidgets.QHBoxLayout()
-    self.signalLayout.addLayout(self.zoomPanel)
-    self.zoomInButton = QtWidgets.QPushButton("Zoom In")
-    self.zoomInButton.clicked.connect(self.zoom_in)
-    self.zoomPanel.addWidget(self.zoomInButton)
-    self.zoomOutButton = QtWidgets.QPushButton("Zoom Out")
-    self.zoomOutButton.clicked.connect(self.zoom_out)
-    self.zoomPanel.addWidget(self.zoomOutButton)
+
+    
     
     self.signals = []  
     self.signalsLines = []  
@@ -93,43 +88,129 @@ class GraphWidget(QtWidgets.QWidget):
     self.signalSpeeds = []  
     
     self.isPaused = False
-  
+
+    self.controlLayout3 = QtWidgets.QHBoxLayout()
+    loadIcon = QtGui.QIcon()
+    loadIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--upload.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.loadSignalButton = QtWidgets.QPushButton() 
+    self.loadSignalButton.setFixedWidth(50)
+    self.loadSignalButton.setIcon(loadIcon)
+    self.loadSignalButton.clicked.connect(self.load_signal)
+    self.controlLayout3.addWidget(self.loadSignalButton)
+
+    self.controlLayout3.addSpacerItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
+    
+    reportIcon = QtGui.QIcon()
+    reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.reportButton = QtWidgets.QPushButton()
+    self.reportButton.setFixedWidth(50)
+    self.reportButton.setIcon(reportIcon)
+    self.reportButton.clicked.connect(self.open_report_dialog) 
+    self.controlLayout3.addWidget(self.reportButton)
+
+    self.signalLayout.addLayout(self.controlLayout3)
+    
     self.signalListWidget = QtWidgets.QListWidget()
     self.signalListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
     self.signalListWidget.itemChanged.connect(self.update_play_button_state)
     self.signalLayout.addWidget(self.signalListWidget)
 
-
-    self.loadSignalButton = QtWidgets.QPushButton("Load Signal")
-    self.loadSignalButton.clicked.connect(self.load_signal)
-    self.signalLayout.addWidget(self.loadSignalButton)
+    self.controlLayout1 = QtWidgets.QHBoxLayout()
     
-    self.colorButton = QtWidgets.QPushButton("Select Color")
-    self.colorButton.clicked.connect(self.select_color)
-    self.signalLayout.addWidget(self.colorButton)
     
+    self.speedPanal = QtWidgets.QHBoxLayout()
+    self.speedLabel = QtWidgets.QLabel("Speed:")
+    self.speedPanal.addWidget(self.speedLabel)
+    self.controlLayout1.addWidget(self.speedLabel)
     self.speedSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
     self.speedSlider.setMinimum(1)  
     self.speedSlider.setMaximum(100)  
     self.speedSlider.setValue(10)  
     self.speedSlider.valueChanged.connect(self.change_speed)
-    self.signalLayout.addWidget(self.speedSlider)
-    
-    self.playPauseButton = QtWidgets.QPushButton("Pause")
-    self.playPauseButton.clicked.connect(self.play_pause)
-    self.signalLayout.addWidget(self.playPauseButton)
-  
-    self.clearButton = QtWidgets.QPushButton("Clear Graph")
-    self.clearButton.clicked.connect(self.clear_selected_graph)
-    self.signalLayout.addWidget(self.clearButton)
+    self.speedPanal.addWidget(self.speedSlider)
+    self.signalLayout.addLayout(self.speedPanal)
 
-    self.deleteButton = QtWidgets.QPushButton("Delete Signal")
-    self.deleteButton.clicked.connect(self.delete_selected_signal)
-    self.signalLayout.addWidget(self.deleteButton)
+
+    self.controlLayout1=QtWidgets.QHBoxLayout()
     
-    self.reportButton = QtWidgets.QPushButton("Create Report")
-    self.reportButton.clicked.connect(self.open_report_dialog) 
-    self.signalLayout.addWidget(self.reportButton)
+    self.pauseIcon = QtGui.QIcon()
+    self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"), 
+                        QtGui.QIcon.Mode.Normal, 
+                        QtGui.QIcon.State.On)
+    self.playIcon = QtGui.QIcon()
+    self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.playPauseButton = QtWidgets.QPushButton()
+    self.playPauseButton.setIcon(self.pauseIcon)
+    self.playPauseButton.clicked.connect(self.play_pause)
+    self.controlLayout1.addWidget(self.playPauseButton)
+
+    replayIcon = QtGui.QIcon()
+    replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.replayButton = QtWidgets.QPushButton()
+    self.replayButton.setIcon(replayIcon)
+    self.controlLayout1.addWidget(self.replayButton)
+  
+    clearIcon = QtGui.QIcon()
+    clearIcon.addPixmap(QtGui.QPixmap("./control/pics/ic--baseline-clear (1).png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.clearButton = QtWidgets.QPushButton()
+    self.clearButton.setIcon(clearIcon)
+    self.clearButton.clicked.connect(self.clear_selected_graph)
+    self.controlLayout1.addWidget(self.clearButton)
+
+    deleteIcon = QtGui.QIcon()
+    deleteIcon.addPixmap(QtGui.QPixmap("./control/pics/ic--baseline-delete.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.deleteButton = QtWidgets.QPushButton()
+    self.deleteButton.setIcon(deleteIcon)
+    self.deleteButton.clicked.connect(self.delete_selected_signal)
+    self.controlLayout1.addWidget(self.deleteButton)
+    
+    self.signalLayout.addLayout(self.controlLayout1)
+
+
+    #*********************************************************************************************#
+
+    self.controlLayout2=QtWidgets.QHBoxLayout()
+
+    zoomINIcon = QtGui.QIcon()
+    zoomINIcon.addPixmap(QtGui.QPixmap("./control/pics/raphael--zoomin.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.zoomInButton = QtWidgets.QPushButton()
+    self.zoomInButton.setIcon(zoomINIcon)
+    self.zoomInButton.clicked.connect(self.zoom_in)
+    self.controlLayout2.addWidget(self.zoomInButton)
+
+    zooOutIcon = QtGui.QIcon()
+    zooOutIcon.addPixmap(QtGui.QPixmap("./control/pics/raphael--zoomout.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.zoomOutButton = QtWidgets.QPushButton()
+    self.zoomOutButton.setIcon(zooOutIcon)
+    self.zoomOutButton.clicked.connect(self.zoom_out)
+    self.controlLayout2.addWidget(self.zoomOutButton)
+
+    colorIcon = QtGui.QIcon()
+    colorIcon.addPixmap(QtGui.QPixmap("./control/pics/bxs--color-fill.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.colorButton = QtWidgets.QPushButton()
+    self.colorButton.setIcon(colorIcon)
+    self.colorButton.clicked.connect(self.select_color)
+    self.controlLayout2.addWidget(self.colorButton)
+
+    self.signalLayout.addLayout(self.controlLayout2)
+    
+    
+
+    #*********************************************************************************************#
+
+    self.cineModePanel = QtWidgets.QHBoxLayout()
+    self.forwardLabel = QtWidgets.QLabel("Forward")
+    self.cineModePanel.addWidget(self.forwardLabel)
+    self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+    self.mainSlider.setMinimum(0)
+    self.mainSlider.setMaximum(100)
+    self.mainSlider.setValue(0)
+    self.mainSlider.valueChanged.connect(self.slider_moved)
+    self.cineModePanel.addWidget(self.mainSlider)
+    self.backWard = QtWidgets.QLabel("Backward")
+    self.cineModePanel.addWidget(self.backWard)
+    self.signalLayout.addLayout(self.cineModePanel)
+
     
     self.playPauseButton.setEnabled(False)
 
@@ -145,12 +226,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.timer.timeout.connect(self.update)
     self.timer.start()
 
-    self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-    self.mainSlider.setMinimum(0)
-    self.mainSlider.setMaximum(100)
-    self.mainSlider.setValue(0)
-    self.mainSlider.valueChanged.connect(self.slider_moved)
-    self.signalLayout.addWidget(self.mainSlider)
 
     self.currentSignalIndex = None 
 
@@ -294,9 +369,9 @@ class GraphWidget(QtWidgets.QWidget):
 
   def play_pause(self):
     if self.isPaused:
-        self.playPauseButton.setText("Pause")
+        self.playPauseButton.setIcon(self.pauseIcon)
     else:
-        self.playPauseButton.setText("Play")
+        self.playPauseButton.setIcon(self.playIcon)
     self.isPaused = not self.isPaused
 
   def change_speed(self):
