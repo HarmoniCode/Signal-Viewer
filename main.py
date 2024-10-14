@@ -444,6 +444,7 @@ class SecondPage(QtWidgets.QWidget):
 
     def initUI(self):
         self.setWindowTitle('Dual Radar Plot Viewer')
+        self.parent.setGeometry(100, 100, 1000, 400)
 
         self.radar_plot1 = RadarPlotWidget()
         self.radar_plot2 = RadarPlotWidget()
@@ -456,22 +457,42 @@ class SecondPage(QtWidgets.QWidget):
         self.init_plot_vars(1)
         self.init_plot_vars(2)
 
+        main_layout = QtWidgets.QVBoxLayout()
+
+
+        horizontal_control=QtWidgets.QHBoxLayout()
+        backIcon=QtGui.QIcon()
+        backIcon.addPixmap(QtGui.QPixmap("./control/pics/bx--arrow-back.png"),QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
+        self.back_to_first_page_button = QtWidgets.QPushButton()
+        self.back_to_first_page_button.setIcon(backIcon)
+        self.back_to_first_page_button.setMinimumHeight(30)
+        self.back_to_first_page_button.clicked.connect(self.back_to_first_page)
+        horizontal_control.addWidget(self.back_to_first_page_button)
+        horizontal_control.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
+
+        main_layout.addLayout(horizontal_control)
+
         radar_layout = QtWidgets.QHBoxLayout()
-        radar_layout.addWidget(self.radar_plot1)
-        radar_layout.addWidget(self.radar_plot2)
+        vertical_layout1 = QtWidgets.QVBoxLayout()
+        
+        radar_layout.addLayout(vertical_layout1)
+        vertical_layout1.addWidget(self.radar_plot1)
+
+        vertical_layout2 = QtWidgets.QVBoxLayout()
+        radar_layout.addLayout(vertical_layout2)
+        vertical_layout2.addWidget(self.radar_plot2)
 
         controls1 = self.create_controls(self.radar_plot1, self.timer1, plot_num=1)
-
+        vertical_layout1.addLayout(controls1)
         controls2 = self.create_controls(self.radar_plot2, self.timer2, plot_num=2)
+        vertical_layout2.addLayout(controls2)
 
-        main_layout = QtWidgets.QVBoxLayout()
+
         main_layout.addLayout(radar_layout)
         main_layout.addLayout(controls1)
         main_layout.addLayout(controls2)
 
-        self.back_to_first_page_button = QtWidgets.QPushButton("Back to First Page")
-        self.back_to_first_page_button.clicked.connect(self.back_to_first_page)
-        main_layout.addWidget(self.back_to_first_page_button)
+        
 
         self.setLayout(main_layout)
 
