@@ -9,11 +9,15 @@ import pyqtgraph as pg
 import numpy as np
 import sys
 import csv
+import time
+import yfinance as yf
+from pyqtgraph import mkPen
+
 
 class ReportDialog(QtWidgets.QDialog):
-    def __init__(self, graph_widget, parent=None):
+    def __init__(self, graph, parent=None):
         super().__init__(parent)
-        self.graph_widget = graph_widget  
+        self.graph = graph  
         self.setWindowTitle("Create Report")
         self.setMinimumSize(500, 500)
 
@@ -38,7 +42,7 @@ class ReportDialog(QtWidgets.QDialog):
         self.layout.addWidget(self.screenshotButton)
 
     def add_screenshot_to_report(self):
-        graph_widget = self.graph_widget.graph  
+        graph_widget = self.graph
         graph_rect = graph_widget.geometry()
         screen = QtGui.QGuiApplication.primaryScreen()
         screenshot = screen.grabWindow(graph_widget.winId(), graph_rect.x(), graph_rect.y(), graph_rect.width() - 10, graph_rect.height() - 10)
@@ -66,6 +70,10 @@ class GraphWidget(QtWidgets.QWidget):
     self.layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
     self.layout.setSpacing(20)  # Remove spacing between items
 
+    self.isPaused = False
+    self.isConnected = False
+    self.is_hidden = False
+
     self.graph = pg.PlotWidget()
     self.graph.showGrid(x=True, y=True)
     self.layout.addWidget(self.graph)
@@ -92,7 +100,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.signalColors = []
     self.signalSpeeds = []
 
-    self.isPaused = False
 
     self.controlLayout3 = QtWidgets.QHBoxLayout()
     loadIcon = QtGui.QIcon()
@@ -190,6 +197,12 @@ class GraphWidget(QtWidgets.QWidget):
     self.zoomOutButton.clicked.connect(self.zoom_out)
     self.controlLayout2.addWidget(self.zoomOutButton)
 
+    self.transferButton = QtWidgets.QPushButton("Transfer Signal")
+    self.transferButton.clicked.connect(self.transfer_signal)
+    self.controlLayout2.addWidget(self.transferButton)
+
+
+
     ## hiden button
 
     colorIcon = QtGui.QIcon()
@@ -199,8 +212,17 @@ class GraphWidget(QtWidgets.QWidget):
     self.colorButton.clicked.connect(self.select_color)
     self.controlLayout2.addWidget(self.colorButton)
 
+    self.connectRealTimeSignalButton = QtWidgets.QPushButton("Connect")
+    self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
+    self.controlLayout2.addWidget(self.connectRealTimeSignalButton)
+
+
     self.signalLayout.addLayout(self.controlLayout2)
 
+    self.showHideButton = QtWidgets.QPushButton("Show")
+    self.controlLayout2.addWidget(self.showHideButton)
+
+    
     # Cine Mode Panel Layout
     self.cineModePanel = QtWidgets.QHBoxLayout()
     self.cineModePanel.setContentsMargins(0, 0, 0, 0)  # Remove margins for cine mode panel
@@ -229,6 +251,9 @@ class GraphWidget(QtWidgets.QWidget):
     self.timer.setInterval(100)
     self.timer.timeout.connect(self.update)
     self.timer.start()
+
+    self.signalListWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+    self.signalListWidget.customContextMenuRequested.connect(self.show_context_menu)
 
     self.currentSignalIndex = None 
 
@@ -261,7 +286,7 @@ class GraphWidget(QtWidgets.QWidget):
 
   def open_report_dialog(self):
     if self.report_dialog is None:
-        self.report_dialog = ReportDialog(self)
+        self.report_dialog = ReportDialog(self.graph)
         parent_pos = self.mapToGlobal(self.pos())
         self.report_dialog.move(parent_pos.x() + self.width(), parent_pos.y())
     self.report_dialog.show()
@@ -377,6 +402,23 @@ class GraphWidget(QtWidgets.QWidget):
         self.playPauseButton.setIcon(self.playIcon)
     self.isPaused = not self.isPaused
 
+  def connect_stop(self):
+        if  not self.isConnected:
+            self.connectRealTimeSignalButton.setText("Stop")
+            self.isConnected = True
+        else:
+            self.connectRealTimeSignalButton.setText("Connect")
+            self.isConnected = False
+        self.connect_real_time_signal()
+  def show_hide(self):
+    if  self.is_hidden:
+        self.showHideButton.setText("Show")
+        self.is_hidden = True
+    else:
+        self.showHideButton.setText("Hide")
+        self.is_hidden = False
+    self.show_hide_signal()
+
   def change_speed(self):
     for item in self.signalListWidget.selectedItems():
         index = self.signalListWidget.row(item)
@@ -452,6 +494,103 @@ class GraphWidget(QtWidgets.QWidget):
 
         self.graph.setXRange(*new_x_range, padding=0)
         self.graph.setYRange(*new_y_range, padding=0)
+  def transfer_signal(self):
+    signal_viewer = self.parent().parent().parent().parent().parent().parent()
+    selected_items = self.signalListWidget.selectedItems()
+
+    if self is signal_viewer.graphBox1:
+        transferFrom = signal_viewer.graphBox1
+        transferTo = signal_viewer.graphBox2
+    else:
+        transferFrom = signal_viewer.graphBox2
+        transferTo = signal_viewer.graphBox1
+
+    for item in selected_items:
+        index = transferFrom.signalListWidget.row(item)
+
+        if index < len(transferFrom.signalsLines) and transferFrom.signalsLines[index] is not None:
+            time, amplitude = transferFrom.signals[index]
+            color = transferFrom.signalColors[index]
+            speed = transferFrom.signalSpeeds[index]
+            currentPosition = transferFrom.currentPositions[index]
+
+            transferTo.signals.append((time, amplitude))
+            transferTo.currentPositions.append(currentPosition)
+            transferTo.signalColors.append(color)
+            transferTo.signalSpeeds.append(speed)
+
+            newItem = QtWidgets.QListWidgetItem(item.text())
+            newItem.setFlags(newItem.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
+            newItem.setCheckState(QtCore.Qt.CheckState.Unchecked)
+            transferTo.signalListWidget.addItem(newItem)
+
+            transferFrom.graph.removeItem(transferFrom.signalsLines[index])
+            transferFrom.signalsLines[index] = None
+
+            del transferFrom.signals[index]
+            del transferFrom.currentPositions[index]
+            del transferFrom.signalColors[index]
+            del transferFrom.signalSpeeds[index]
+            transferFrom.signalListWidget.takeItem(index)
+  def connect_real_time_signal(self):
+    self.currentPositions.append(0)  
+    print(self.isConnected)
+    if self.isConnected:
+      itemIsExist=[]
+      newItem = "OpenSky signal"
+      item = QtWidgets.QListWidgetItem(newItem)
+      item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
+      item.setCheckState(QtCore.Qt.CheckState.Unchecked)
+      
+      for index in range(self.signalListWidget.count()):
+        if self.signalListWidget.item(index).text() == newItem:
+          itemIsExist.append(True)      
+        else:  
+          itemIsExist.append(False)
+      if True in itemIsExist:
+        pass
+      else:
+          self.signalListWidget.addItem(item)     
+      self.timer = QtCore.QTimer()  
+      self.timer.setInterval(1000)  
+      self.timer.timeout.connect(self.fetch_real_time_signal)
+      self.timer.start()
+    else:
+      print("Exit")
+      self.timer.stop()
+        
+        
+  def fetch_real_time_signal(self):
+    price = []
+    times = []
+    
+    for _ in range(8):
+        ticker = yf.Ticker("AAPL") 
+        real_time_data = ticker.info
+        currentTime = time.time()
+        
+        price.append(real_time_data['currentPrice'])
+        times.append(currentTime)
+        
+        if len(price) > 0 and len(times) > 0:
+            self.signals.append((times, price))
+            self.signalColors.append(self.selectedColor)
+            self.signalSpeeds.append(1)
+            
+            pen = mkPen(color=self.selectedColor, width=2, style=QtCore.Qt.PenStyle.SolidLine)
+            self.signalsLines.append(self.graph.plot(times, price, pen=pen))
+   #############################################################################################
+   
+   ####################################################
+  def show_hide_signal(self):
+    selected_items = self.signalListWidget.selectedItems()
+    for item in selected_items:
+            index = self.signalListWidget.row(item)
+            if index < len(self.signalsLines) and self.signalsLines[index] is not None:   
+              if self.is_hidden:
+                self.signalsLines[index].show()
+              else:
+                pass
 
 
 
@@ -510,6 +649,7 @@ class NonRecPage(QtWidgets.QWidget):
 
         main_layout.addLayout(radar_layout)
         main_layout.addLayout(controls1)
+        main_layout.addSpacerItem(QtWidgets.QSpacerItem(15, 0, QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Expanding))
         main_layout.addLayout(controls2)
 
         
@@ -781,8 +921,7 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         # Report for third graph
         reportIcon = QtGui.QIcon()
-        reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,
-                             QtGui.QIcon.State.On)
+        reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
         self.thirdGraphReportButton = QtWidgets.QPushButton()
         self.thirdGraphReportButton.setFixedWidth(50)
         self.thirdGraphReportButton.setIcon(reportIcon)
@@ -831,6 +970,7 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.thirdGraph_container.setVisible(True)
 
         self.first_page_layout.addWidget(self.glueFrame)
+        self.glueFrame.setVisible(False)
         self.stack.addWidget(self.first_page)  # Add first page to the stack
 
         # Timer
@@ -850,19 +990,19 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.stack.setCurrentWidget(self.first_page)
     def open_report_dialog(self):
         if self.report_dialog is None:
-            self.report_dialog = ReportDialog(self)
+            self.report_dialog = ReportDialog(self.thirdGraph)
             parent_pos = self.mapToGlobal(self.pos())
             self.report_dialog.move(parent_pos.x() + self.width(), parent_pos.y())
         self.report_dialog.show()
     def toggle_third_graph(self):
-        if self.thirdGraph_container.isVisible():
-            self.thirdGraph_container.setVisible(False)
+        if self.glueFrame.isVisible():
+            self.glueFrame.setVisible(False)
             self.first_page_layout.removeWidget(self.glueFrame)
             self.toggleThirdGraphButton.setText("Show Third Graph")
             self.setFixedSize(self.original_width, self.original_height)
         else:
             self.first_page_layout.addWidget(self.glueFrame)
-            self.thirdGraph_container.setVisible(True)
+            self.glueFrame.setVisible(True)
             self.toggleThirdGraphButton.setText("Hide Third Graph")
             self.setFixedSize(self.original_width, self.original_height + 300)
 
