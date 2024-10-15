@@ -551,8 +551,11 @@ class GraphWidget(QtWidgets.QWidget):
 
             transferFrom.graph.removeItem(transferFrom.signalsLines[index])
             transferFrom.signalsLines[index] = None
-            
+            # transferTo.legend.addItem(transferFrom.sigalsLines[index],transferFrom.signalsLines[index].text())
+            transferFrom.legend.removeItem(item.text())
+
             del transferFrom.signals[index]
+            del transferFrom.signalsLines[index]
             del transferFrom.currentPositions[index]
             del transferFrom.signalColors[index]
             del transferFrom.signalSpeeds[index]
@@ -562,7 +565,7 @@ class GraphWidget(QtWidgets.QWidget):
     print(self.isConnected)
     if self.isConnected:
       itemIsExist=[]
-      newItem = "OpenSky signal"
+      newItem = "APPL finance"
       item = QtWidgets.QListWidgetItem(newItem)
       item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
       item.setCheckState(QtCore.Qt.CheckState.Unchecked)
@@ -987,7 +990,7 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.glue_tool_box.setMinimumHeight(250)
 
         # Report for third graph
-        report_layout= QtWidgets.QHBoxLayout()
+        self.report_layout= QtWidgets.QHBoxLayout()
         reportIcon = QtGui.QIcon()
         reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
         self.thirdGraphReportButton = QtWidgets.QPushButton()
