@@ -280,25 +280,34 @@ class GraphWidget(QtWidgets.QWidget):
         item = self.signalListWidget.itemAt(pos)
         if item is not None:
             index = self.signalListWidget.row(item)
-            self.show_statistics_tooltip(index, pos)
+            statistics_message=self.show_statistics_tooltip(index, pos)
+            statistics_message=(
+                f"<b style='color: blue;'>Signal:</b> {statistics_message['Signal']}<br>"
+                f"<b style='color: blue;'>Max Value:</b> {statistics_message['Max_Value']}<br>"
+                f"<b style='color: blue;'>Min Value:</b> {statistics_message['Min_Value']}<br>"
+                f"<b style='color: blue;'>Time Length:</b> {statistics_message['Time_Length']:.2f}<br>"
+                f"<b style='color: blue;'>Speed:</b> {statistics_message['Speed']}<br>"
+                f"<b style='color: blue;'>Color:</b> {statistics_message['Color']}"
+            )
+            QtWidgets.QToolTip.showText(self.signalListWidget.mapToGlobal(pos), statistics_message)
 
   def show_statistics_tooltip(self, index, pos):
-      if index < len(self.signals):
-          time, amplitude = self.signals[index]
-          max_value = np.max(amplitude)
-          min_value = np.min(amplitude)
-          time_length = time[-1] - time[0]  
-          speed = self.signalSpeeds[index]
-          color = self.signalColors[index]
-          statistics_message = (
-            f"<b style='color: blue;'>Signal:</b> {self.signalListWidget.item(index).text()}<br>"
-            f"<b style='color: blue;'>Max Value:</b> {max_value}<br>"
-            f"<b style='color: blue;'>Min Value:</b> {min_value}<br>"
-            f"<b style='color: blue;'>Time Length:</b> {time_length:.2f}<br>"
-            f"<b style='color: blue;'>Speed:</b> {speed}<br>"
-            f"<b style='color: blue;'>Color:</b> {color}"
-          )
-          QtWidgets.QToolTip.showText(self.signalListWidget.mapToGlobal(pos), statistics_message)
+    if index < len(self.signals):
+        time, amplitude = self.signals[index]
+        max_value = np.max(amplitude)
+        min_value = np.min(amplitude)
+        time_length = time[-1] - time[0]  
+        speed = self.signalSpeeds[index]
+        color = self.signalColors[index]
+        statistics_message = {
+        "Signal": self.signalListWidget.item(index).text(),
+        "Max_Value": max_value,
+        "Min_Value": min_value,
+        "Time_Length": time_length,
+        "Speed": speed,
+        "Color": color
+        }
+        return statistics_message
 
   def open_report_dialog(self):
     if self.report_dialog is None:
@@ -899,6 +908,7 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.controlLayout1.addWidget(self.toggleThirdGraphButton)
 
         self.linkButton = QtWidgets.QPushButton()
+        self.linkButton.setFixedWidth(50)
         self.linkButton.setIcon(self.unLinkIcon)
         self.linkButton.clicked.connect(self.toggle_linking)
         self.controlLayout1.addWidget(self.linkButton)
@@ -969,11 +979,15 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.glue_tool_box_layout.addWidget(self.glueButton)
 
         # Gap Slider
+        gap_slider_layout=QtWidgets.QHBoxLayout()
+        gap_label = QtWidgets.QLabel("Gap : ")
         self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.gap_slider.setMinimum(-100)
         self.gap_slider.setMaximum(100)
         self.gap_slider.setValue(0)
-        self.glue_tool_box_layout.addWidget(self.gap_slider)
+        gap_slider_layout.addWidget(gap_label)
+        gap_slider_layout.addWidget(self.gap_slider)
+        self.glue_tool_box_layout.addLayout(gap_slider_layout)
 
         # Interpolation Dropdown
         self.interpolation_dropdown = QtWidgets.QComboBox()
