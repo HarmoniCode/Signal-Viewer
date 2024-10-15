@@ -168,10 +168,10 @@ class GraphWidget(QtWidgets.QWidget):
     self.playPauseButton.clicked.connect(self.play_pause)
     self.controlLayout1.addWidget(self.playPauseButton)
 
-    replayIcon = QtGui.QIcon()
-    replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.replayIcon = QtGui.QIcon()
+    self.replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.replayButton = QtWidgets.QPushButton()
-    self.replayButton.setIcon(replayIcon)
+    self.replayButton.setIcon(self.replayIcon)
     self.replayButton.clicked.connect(self.rewind)
     self.controlLayout1.addWidget(self.replayButton)
 
@@ -671,6 +671,7 @@ class NonRecPage(QtWidgets.QWidget):
         vertical_layout2.addLayout(controls2)
 
 
+        main_layout.setSpacing(20)
         main_layout.addLayout(radar_layout)
         main_layout.addLayout(controls1)
         main_layout.addSpacerItem(QtWidgets.QSpacerItem(15, 0, QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Expanding))
@@ -877,10 +878,10 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         self.report_dialog = None
         self.setWindowTitle("Signal Viewer")
-        self.setGeometry(100, 100, 1000, 600)
+        self.setGeometry(100, 100, 1200, 600)
 
         self.original_height = 615
-        self.original_width = 1000
+        self.original_width = 1200
 
         self.central_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.central_widget)
@@ -902,30 +903,53 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.controlLayout1 = QtWidgets.QHBoxLayout()
         self.controlLayout1.setContentsMargins(10, 0, 0, 0)
 
-        # Toggle Third Graph Button
-        self.toggleThirdGraphButton = QtWidgets.QPushButton("Third Graph")
-        self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
-        self.controlLayout1.addWidget(self.toggleThirdGraphButton)
 
         self.linkButton = QtWidgets.QPushButton()
         self.linkButton.setFixedWidth(50)
+        self.linkButton.setFixedHeight(30)
         self.linkButton.setIcon(self.unLinkIcon)
         self.linkButton.clicked.connect(self.toggle_linking)
         self.controlLayout1.addWidget(self.linkButton)
 
+
+
+
+        self.linkPlayButton = QtWidgets.QPushButton()
+        self.linkPlayButton.setFixedWidth(50)
+        self.linkPlayButton.setFixedHeight(30)
+
+        self.linkPlayButton.clicked.connect(self.play_linked)
+        self.controlLayout1.addWidget(self.linkPlayButton)
+        
+        self.linkRewindButton = QtWidgets.QPushButton()
+        self.linkRewindButton.setFixedWidth(50)
+        self.linkRewindButton.setFixedHeight(30)
+
+        self.linkRewindButton.clicked.connect(self.rewind_linked)
+        self.controlLayout1.addWidget(self.linkRewindButton)
+        
+        self.controlLayout1.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
+        self.controlGraphLayout.addLayout(self.controlLayout1)
+        
+        # Toggle Third Graph Button
+        self.toggleThirdGraphButton = QtWidgets.QPushButton("Third Graph")
+        self.toggleThirdGraphButton.setFixedHeight(30)
+        self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
+        self.controlLayout1.addWidget(self.toggleThirdGraphButton)
+        
         # Toggle ROI Button
         self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
+        self.toggleROIButton.setFixedHeight(30)
         self.toggleROIButton.clicked.connect(self.toggle_roi)
         self.controlLayout1.addWidget(self.toggleROIButton)
 
         # Non-Rectangle Button to go to the Second Page
-        self.NonRegtangle = QtWidgets.QPushButton("Non-Rectangle")
+        self.NonRegtangle = QtWidgets.QPushButton("Spider Graph")
+        self.NonRegtangle.setFixedHeight(30)
         self.NonRegtangle.clicked.connect(self.show_second_page)  # Connect to the second page
         self.controlLayout1.addWidget(self.NonRegtangle)
 
         # Spacer
-        self.controlLayout1.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
-        self.controlGraphLayout.addLayout(self.controlLayout1)
 
         # Graph Layout
         self.graphlayout = QtWidgets.QVBoxLayout()
@@ -948,6 +972,9 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.graphlayout.addWidget(self.graphFrame2)
 
         self.first_page_layout.addWidget(self.controlGraphFrame)
+        
+        self.linkPlayButton.setIcon(self.graphBox1.playIcon)
+        self.linkRewindButton.setIcon(self.graphBox1.replayIcon)
 
         # Glue Layout
         self.glueFrame = QtWidgets.QFrame(self)
@@ -960,14 +987,16 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.glue_tool_box.setMinimumHeight(250)
 
         # Report for third graph
+        report_layout= QtWidgets.QHBoxLayout()
         reportIcon = QtGui.QIcon()
         reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
         self.thirdGraphReportButton = QtWidgets.QPushButton()
         self.thirdGraphReportButton.setFixedWidth(50)
         self.thirdGraphReportButton.setIcon(reportIcon)
         self.thirdGraphReportButton.clicked.connect(self.open_report_dialog)
-        self.glue_tool_box_layout.addWidget(self.thirdGraphReportButton)
 
+        self.report_layout.addWidget(self.thirdGraphReportButton)
+        self.glue_tool_box_layout.addWidget(self.thirdGraphReportButton)
         # Clear Third Graph Button
         self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
         self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
@@ -1026,6 +1055,25 @@ class SignalViewer(QtWidgets.QMainWindow):
         # Create instance of NonRecPage and add to the stack
         self.second_page = NonRecPage(self)
         self.stack.addWidget(self.second_page)  # Add second page to the stack
+
+    def play_linked(self):
+        if self.graphBox1.isPaused:
+            self.graphBox1.playPauseButton.setIcon(self.graphBox1.pauseIcon)
+            self.graphBox2.playPauseButton.setIcon(self.graphBox2.pauseIcon)
+        else:
+            self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
+            self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
+        self.graphBox1.isPaused = not self.graphBox1.isPaused
+        self.graphBox2.isPaused = not self.graphBox2.isPaused
+
+    def rewind_linked(self):
+        if self.graphBox1.isPaused:
+            self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
+            self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
+        self.graphBox1.isPaused = False
+        self.graphBox2.isPaused = False
+        self.graphBox1.rewind()
+        self.graphBox2.rewind()
 
     def toggle_linking(self):
         if self.linked:
