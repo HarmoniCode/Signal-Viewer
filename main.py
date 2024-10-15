@@ -110,6 +110,18 @@ class GraphWidget(QtWidgets.QWidget):
     self.loadSignalButton.clicked.connect(self.load_signal)
     self.controlLayout3.addWidget(self.loadSignalButton)
 
+    self.connectIcon = QtGui.QIcon()
+    self.connectIcon.addPixmap(QtGui.QPixmap("./control/pics/material-symbols--wifi.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.disconnectIcon = QtGui.QIcon()
+    self.disconnectIcon.addPixmap(QtGui.QPixmap("./control/pics/clarity--disconnected-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.connectRealTimeSignalButton = QtWidgets.QPushButton()
+    self.connectRealTimeSignalButton.setIcon(self.connectIcon)
+    self.connectRealTimeSignalButton.setFixedWidth(50)
+    self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
+    self.controlLayout3.addWidget(self.connectRealTimeSignalButton)
+
     self.controlLayout3.addSpacerItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
 
     reportIcon = QtGui.QIcon()
@@ -197,7 +209,10 @@ class GraphWidget(QtWidgets.QWidget):
     self.zoomOutButton.clicked.connect(self.zoom_out)
     self.controlLayout2.addWidget(self.zoomOutButton)
 
-    self.transferButton = QtWidgets.QPushButton("Transfer Signal")
+    self.transferButton = QtWidgets.QPushButton()
+    trnasferIcon = QtGui.QIcon()
+    trnasferIcon.addPixmap(QtGui.QPixmap("./control/pics/gg--arrows-exchange-alt-v.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.transferButton.setIcon(trnasferIcon)
     self.transferButton.clicked.connect(self.transfer_signal)
     self.controlLayout2.addWidget(self.transferButton)
 
@@ -212,20 +227,21 @@ class GraphWidget(QtWidgets.QWidget):
     self.colorButton.clicked.connect(self.select_color)
     self.controlLayout2.addWidget(self.colorButton)
 
-    self.connectRealTimeSignalButton = QtWidgets.QPushButton("Connect")
-    self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
-    self.controlLayout2.addWidget(self.connectRealTimeSignalButton)
-
-
     self.signalLayout.addLayout(self.controlLayout2)
+    self.showIcon = QtGui.QIcon()
+    self.showIcon.addPixmap(QtGui.QPixmap("./control/pics/streamline--visible.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.hideIcon = QtGui.QIcon()
+    self.hideIcon.addPixmap(QtGui.QPixmap("./control/pics/streamline--invisible-1-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
 
-    self.showHideButton = QtWidgets.QPushButton("Show")
+    self.showHideButton = QtWidgets.QPushButton()
+    self.showHideButton.setIcon(self.showIcon)
+    self.showHideButton.clicked.connect(self.show_hide)
     self.controlLayout2.addWidget(self.showHideButton)
 
     
-    # Cine Mode Panel Layout
     self.cineModePanel = QtWidgets.QHBoxLayout()
-    self.cineModePanel.setContentsMargins(0, 0, 0, 0)  # Remove margins for cine mode panel
+    self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
     self.forwardLabel = QtWidgets.QLabel("Forward")
     self.cineModePanel.addWidget(self.forwardLabel)
     self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
@@ -328,7 +344,7 @@ class GraphWidget(QtWidgets.QWidget):
             self.graph.setYRange(min(amplitude) - y_padding, max(amplitude) + y_padding, padding=0)
 
             self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
-                                 yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
+                                yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
 
   def slider_moved(self, value):
       for index in range(self.signalListWidget.count()):
@@ -404,18 +420,18 @@ class GraphWidget(QtWidgets.QWidget):
 
   def connect_stop(self):
         if  not self.isConnected:
-            self.connectRealTimeSignalButton.setText("Stop")
+            self.connectRealTimeSignalButton.setIcon(self.disconnectIcon)
             self.isConnected = True
         else:
-            self.connectRealTimeSignalButton.setText("Connect")
+            self.connectRealTimeSignalButton.setIcon(self.connectIcon)
             self.isConnected = False
         self.connect_real_time_signal()
   def show_hide(self):
     if  self.is_hidden:
-        self.showHideButton.setText("Show")
+        self.showHideButton.setIcon(self.showIcon)
         self.is_hidden = True
     else:
-        self.showHideButton.setText("Hide")
+        self.showHideButton.setIcon(self.hideIcon)
         self.is_hidden = False
     self.show_hide_signal()
 
@@ -526,7 +542,7 @@ class GraphWidget(QtWidgets.QWidget):
 
             transferFrom.graph.removeItem(transferFrom.signalsLines[index])
             transferFrom.signalsLines[index] = None
-
+            
             del transferFrom.signals[index]
             del transferFrom.currentPositions[index]
             del transferFrom.signalColors[index]
@@ -579,18 +595,16 @@ class GraphWidget(QtWidgets.QWidget):
             
             pen = mkPen(color=self.selectedColor, width=2, style=QtCore.Qt.PenStyle.SolidLine)
             self.signalsLines.append(self.graph.plot(times, price, pen=pen))
-   #############################################################################################
    
-   ####################################################
   def show_hide_signal(self):
-    selected_items = self.signalListWidget.selectedItems()
-    for item in selected_items:
-            index = self.signalListWidget.row(item)
-            if index < len(self.signalsLines) and self.signalsLines[index] is not None:   
-              if self.is_hidden:
-                self.signalsLines[index].show()
-              else:
-                pass
+        selected_items = self.signalListWidget.selectedItems()
+        for item in selected_items:
+                index = self.signalListWidget.row(item)
+                if index < len(self.signalsLines) and self.signalsLines[index] is not None:   
+                    if self.signalsLines[index].isVisible():
+                        self.signalsLines[index].hide()
+                    else:
+                        self.signalsLines[index].show()  
 
 
 
@@ -625,6 +639,7 @@ class NonRecPage(QtWidgets.QWidget):
         self.back_to_first_page_button = QtWidgets.QPushButton()
         self.back_to_first_page_button.setIcon(backIcon)
         self.back_to_first_page_button.setMinimumHeight(30)
+        self.back_to_first_page_button.setFixedWidth(50)
         self.back_to_first_page_button.clicked.connect(self.back_to_first_page)
         horizontal_control.addWidget(self.back_to_first_page_button)
         horizontal_control.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
@@ -666,6 +681,7 @@ class NonRecPage(QtWidgets.QWidget):
     def create_controls(self, radar_plot, timer, plot_num):
 
         control_layout = QtWidgets.QVBoxLayout()
+        control_layout.setSpacing(10)
 
         controlBox1 = QtWidgets.QHBoxLayout()
 
@@ -841,6 +857,15 @@ class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.linked = True
+
+        self.linkIcon=QtGui.QIcon()
+        self.linkIcon.addPixmap(QtGui.QPixmap("./control/pics/solar--link-bold.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+        self.unLinkIcon=QtGui.QIcon()
+        self.unLinkIcon.addPixmap(QtGui.QPixmap("./control/pics/fa-solid--unlink.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+
         self.report_dialog = None
         self.setWindowTitle("Signal Viewer")
         self.setGeometry(100, 100, 1000, 600)
@@ -869,9 +894,14 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.controlLayout1.setContentsMargins(10, 0, 0, 0)
 
         # Toggle Third Graph Button
-        self.toggleThirdGraphButton = QtWidgets.QPushButton("Show Third Graph")
+        self.toggleThirdGraphButton = QtWidgets.QPushButton("Third Graph")
         self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
         self.controlLayout1.addWidget(self.toggleThirdGraphButton)
+
+        self.linkButton = QtWidgets.QPushButton()
+        self.linkButton.setIcon(self.unLinkIcon)
+        self.linkButton.clicked.connect(self.toggle_linking)
+        self.controlLayout1.addWidget(self.linkButton)
 
         # Toggle ROI Button
         self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
@@ -983,6 +1013,21 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.second_page = NonRecPage(self)
         self.stack.addWidget(self.second_page)  # Add second page to the stack
 
+    def toggle_linking(self):
+        if self.linked:
+            # Unlink the axes
+            self.graphBox2.graph.setXLink(None)
+            self.graphBox2.graph.setYLink(None)
+            self.linkButton.setIcon(self.linkIcon)
+            self.linked = False
+        else:
+            # Relink the axes
+            self.graphBox2.graph.setXLink(self.graphBox1.graph)
+            self.graphBox2.graph.setYLink(self.graphBox1.graph)
+            self.linkButton.setIcon(self.unLinkIcon)
+            self.linked = True
+
+
     def show_second_page(self):
         self.stack.setCurrentWidget(self.second_page)
 
@@ -998,12 +1043,12 @@ class SignalViewer(QtWidgets.QMainWindow):
         if self.glueFrame.isVisible():
             self.glueFrame.setVisible(False)
             self.first_page_layout.removeWidget(self.glueFrame)
-            self.toggleThirdGraphButton.setText("Show Third Graph")
+            self.toggleThirdGraphButton.setText("Third Graph")
             self.setFixedSize(self.original_width, self.original_height)
         else:
             self.first_page_layout.addWidget(self.glueFrame)
             self.glueFrame.setVisible(True)
-            self.toggleThirdGraphButton.setText("Hide Third Graph")
+            self.toggleThirdGraphButton.setText("Third Graph")
             self.setFixedSize(self.original_width, self.original_height + 300)
 
 
