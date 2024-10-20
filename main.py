@@ -21,8 +21,6 @@ class ReportDialog(QtWidgets.QDialog):
         self.setWindowTitle("Create Report")
         self.setMinimumSize(500, 500)
 
-        
-
         self.layout = QtWidgets.QVBoxLayout(self)
         self.textEdit = QtWidgets.QTextEdit()
         default_font = QtGui.QFont()
@@ -41,6 +39,49 @@ class ReportDialog(QtWidgets.QDialog):
         self.screenshotButton.clicked.connect(self.add_screenshot_to_report)
         self.layout.addWidget(self.screenshotButton)
 
+        self.showStatisticsButton = QtWidgets.QPushButton("Show Statistics")
+        self.showStatisticsButton.clicked.connect(self.show_statistics_table)
+        self.layout.addWidget(self.showStatisticsButton)
+        
+        
+        
+
+    def show_statistics_table(self):
+        selectedIndecies = self.graph.parent().signalListWidget.selectedIndexes()
+        if len(selectedIndecies) > 0:
+            statistics = self.graph.parent().show_statistics_tooltip(selectedIndecies[0].row())
+            print(statistics)
+
+        if statistics:
+            
+            cursor = self.textEdit.textCursor()
+            cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)  
+            
+            keyword_format = QtGui.QTextCharFormat()
+            keyword_format.setFontWeight(QtGui.QFont.Weight.Bold)
+            keyword_format.setFontPointSize(11)
+            keyword_format.setForeground(QtGui.QColor("blue"))
+
+            value_format = QtGui.QTextCharFormat()
+            value_format.setFontWeight(QtGui.QFont.Weight.Bold)
+            value_format.setFontPointSize(11)
+            value_format.setForeground(QtGui.QColor("black"))
+            
+            def insert_formatted_text(keyword, value):
+                cursor.insertText(keyword + "  ", keyword_format)  
+                cursor.insertText(str(value) + "\n", value_format)  
+            
+            insert_formatted_text("Max Value", statistics['Max_Value'])
+            insert_formatted_text("Min Value", statistics['Min_Value'])
+            insert_formatted_text("Length", statistics['Time_Length'])
+            insert_formatted_text("Speed", statistics['Speed'])
+            insert_formatted_text("Color", statistics['Color'])
+            insert_formatted_text("STD", statistics['Std_Deviation'])
+
+            self.textEdit.setTextCursor(cursor)
+
+
+
     def add_screenshot_to_report(self):
         graph_widget = self.graph
         graph_rect = graph_widget.geometry()
@@ -50,6 +91,7 @@ class ReportDialog(QtWidgets.QDialog):
         cursor = self.textEdit.textCursor()
         cursor.insertImage(resized_screenshot.toImage(), "Screenshot")  
         self.textEdit.setTextCursor(cursor)
+        self.show_statistics_table()
 
     def export_report(self):
         fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
@@ -67,8 +109,8 @@ class GraphWidget(QtWidgets.QWidget):
     super().__init__(parent)
     
     self.layout = QtWidgets.QHBoxLayout(self)
-    self.layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
-    self.layout.setSpacing(20)  # Remove spacing between items
+    self.layout.setContentsMargins(0, 0, 0, 0)
+    self.layout.setSpacing(20)
 
     self.isPaused = False
     self.isConnected = False
@@ -76,7 +118,10 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.graph = pg.PlotWidget()
     self.graph.showGrid(x=True, y=True)
-    self.layout.addWidget(self.graph)
+    self.graphLayout = QtWidgets.QVBoxLayout()
+    self.graphLayout.setSpacing(0)
+    self.graphLayout.addWidget(self.graph)
+    self.layout.addLayout(self.graphLayout)
 
     self.legend = pg.LegendItem(offset=(70, 20))
     self.legend.setParentItem(self.graph.graphicsItem())
@@ -87,12 +132,13 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.roi = pg.LinearRegionItem()
     self.roi.setZValue(10)
+    self.roi.setRegion([0, 0.4])
     self.roi.hide()
 
     self.graph.addItem(self.roi)
 
     self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
-    self.signalLayout.setContentsMargins(0, 0, 0, 0)  # Remove margins for signal layout
+    self.signalLayout.setContentsMargins(0, 0, 0, 0) 
 
     self.signals = []
     self.signalsLines = []
@@ -141,7 +187,7 @@ class GraphWidget(QtWidgets.QWidget):
     self.signalLayout.addWidget(self.signalListWidget)
 
     self.controlLayout1 = QtWidgets.QHBoxLayout()
-    self.controlLayout1.setContentsMargins(0, 0, 0, 0)  # Remove margins for control layout
+    self.controlLayout1.setContentsMargins(0, 0, 0, 0)
 
     self.speedPanal = QtWidgets.QHBoxLayout()
     self.speedLabel = QtWidgets.QLabel("Speed:")
@@ -155,25 +201,33 @@ class GraphWidget(QtWidgets.QWidget):
     self.speedPanal.addWidget(self.speedSlider)
     self.signalLayout.addLayout(self.speedPanal)
 
-    # Control Layout for Play/Pause and Other Buttons
+   
     self.controlLayout1 = QtWidgets.QHBoxLayout()
-    self.controlLayout1.setContentsMargins(0, 0, 0, 0)  # Remove margins for control layout
+    self.controlLayout1.setContentsMargins(0, 0, 0, 0)
+
+    self.cineModeLayout= QtWidgets.QHBoxLayout()
+    self.cineModeLayout.setSpacing(5)
+    self.cineModeLayout.setContentsMargins(0, 10, 0, 0)
+    self.cineModeLayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+    self.graphLayout.addLayout(self.cineModeLayout)
 
     self.pauseIcon = QtGui.QIcon()
     self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.playIcon = QtGui.QIcon()
     self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.playPauseButton = QtWidgets.QPushButton()
+    self.playPauseButton.setFixedWidth(50)
     self.playPauseButton.setIcon(self.pauseIcon)
     self.playPauseButton.clicked.connect(self.play_pause)
-    self.controlLayout1.addWidget(self.playPauseButton)
 
     self.replayIcon = QtGui.QIcon()
     self.replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     self.replayButton = QtWidgets.QPushButton()
+    self.replayButton.setFixedWidth(50)
     self.replayButton.setIcon(self.replayIcon)
     self.replayButton.clicked.connect(self.rewind)
-    self.controlLayout1.addWidget(self.replayButton)
+    self.cineModeLayout.addWidget(self.replayButton)
+    
 
     clearIcon = QtGui.QIcon()
     clearIcon.addPixmap(QtGui.QPixmap("./control/pics/ic--baseline-clear (1).png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -189,11 +243,17 @@ class GraphWidget(QtWidgets.QWidget):
     self.deleteButton.clicked.connect(self.delete_selected_signal)
     self.controlLayout1.addWidget(self.deleteButton)
 
+    self.transferButton = QtWidgets.QPushButton()
+    trnasferIcon = QtGui.QIcon()
+    trnasferIcon.addPixmap(QtGui.QPixmap("./control/pics/gg--arrows-exchange-alt-v.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.transferButton.setIcon(trnasferIcon)
+    self.transferButton.clicked.connect(self.transfer_signal)
+    self.controlLayout1.addWidget(self.transferButton)
+
     self.signalLayout.addLayout(self.controlLayout1)
 
-    # Control Layout for Zoom
     self.controlLayout2 = QtWidgets.QHBoxLayout()
-    self.controlLayout2.setContentsMargins(0, 0, 0, 0)  # Remove margins for zoom control
+    self.controlLayout2.setContentsMargins(0, 0, 0, 0) 
 
     zoomINIcon = QtGui.QIcon()
     zoomINIcon.addPixmap(QtGui.QPixmap("./control/pics/raphael--zoomin.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -209,12 +269,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.zoomOutButton.clicked.connect(self.zoom_out)
     self.controlLayout2.addWidget(self.zoomOutButton)
 
-    self.transferButton = QtWidgets.QPushButton()
-    trnasferIcon = QtGui.QIcon()
-    trnasferIcon.addPixmap(QtGui.QPixmap("./control/pics/gg--arrows-exchange-alt-v.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-    self.transferButton.setIcon(trnasferIcon)
-    self.transferButton.clicked.connect(self.transfer_signal)
-    self.controlLayout2.addWidget(self.transferButton)
 
 
 
@@ -235,24 +289,51 @@ class GraphWidget(QtWidgets.QWidget):
     self.hideIcon.addPixmap(QtGui.QPixmap("./control/pics/streamline--invisible-1-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
 
     self.showHideButton = QtWidgets.QPushButton()
+    self.showHideButton.setFixedWidth(50)
     self.showHideButton.setIcon(self.showIcon)
     self.showHideButton.clicked.connect(self.show_hide)
-    self.controlLayout2.addWidget(self.showHideButton)
 
     
+    # self.cineModePanel = QtWidgets.QHBoxLayout()
+    # self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
+    # self.backWard = QtWidgets.QLabel("Backward")
+    # self.cineModePanel.addWidget(self.backWard)
+    # self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+    # self.mainSlider.setMinimum(0)
+    # self.mainSlider.setMaximum(100)
+    # self.mainSlider.setValue(0)
+    # self.mainSlider.valueChanged.connect(self.slider_moved)
+    # self.cineModePanel.addWidget(self.mainSlider)
+    # self.forwardLabel = QtWidgets.QLabel("Forward")
+    # self.cineModePanel.addWidget(self.forwardLabel)
+    # self.signalLayout.addLayout(self.cineModePanel)
+
     self.cineModePanel = QtWidgets.QHBoxLayout()
     self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
-    self.forwardLabel = QtWidgets.QLabel("Forward")
-    self.cineModePanel.addWidget(self.forwardLabel)
-    self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-    self.mainSlider.setMinimum(0)
-    self.mainSlider.setMaximum(100)
-    self.mainSlider.setValue(0)
-    self.mainSlider.valueChanged.connect(self.slider_moved)
-    self.cineModePanel.addWidget(self.mainSlider)
-    self.backWard = QtWidgets.QLabel("Backward")
-    self.cineModePanel.addWidget(self.backWard)
+
+    # Create Backward Button
+    self.backWardButton = QtWidgets.QPushButton()
+    self.backWardButton.setFixedWidth(50)
+    self.backWardButton.setIcon(QtGui.QIcon("./control/pics/fontisto--backward.png"))
+    self.backWardButton.clicked.connect(self.backward_clicked)
+    self.cineModeLayout.addWidget(self.backWardButton)
+
+    self.cineModeLayout.addWidget(self.playPauseButton)
+
+
+    # Create Forward Button
+    self.forwardButton = QtWidgets.QPushButton()
+    self.forwardButton.setFixedWidth(50)
+    self.forwardButton.setIcon(QtGui.QIcon("./control/pics/fontisto--forward.png"))
+    self.forwardButton.clicked.connect(self.forward_clicked)
+    self.cineModeLayout.addWidget(self.forwardButton)
+
+    self.cineModeLayout.addWidget(self.showHideButton)
+
     self.signalLayout.addLayout(self.cineModePanel)
+    self.default_step = 0.05
+
+
 
     self.playPauseButton.setEnabled(False)
 
@@ -280,23 +361,25 @@ class GraphWidget(QtWidgets.QWidget):
         item = self.signalListWidget.itemAt(pos)
         if item is not None:
             index = self.signalListWidget.row(item)
-            statistics_message=self.show_statistics_tooltip(index, pos)
+            statistics_message=self.show_statistics_tooltip(index)
             statistics_message=(
                 f"<b style='color: blue;'>Signal:</b> {statistics_message['Signal']}<br>"
                 f"<b style='color: blue;'>Max Value:</b> {statistics_message['Max_Value']}<br>"
                 f"<b style='color: blue;'>Min Value:</b> {statistics_message['Min_Value']}<br>"
                 f"<b style='color: blue;'>Time Length:</b> {statistics_message['Time_Length']:.2f}<br>"
                 f"<b style='color: blue;'>Speed:</b> {statistics_message['Speed']}<br>"
-                f"<b style='color: blue;'>Color:</b> {statistics_message['Color']}"
+                f"<b style='color: blue;'>Color:</b> {statistics_message['Color']}<br>"
+                f"<b style='color: blue;'>STD:</b> {statistics_message['Std_Deviation']}"
             )
             QtWidgets.QToolTip.showText(self.signalListWidget.mapToGlobal(pos), statistics_message)
 
-  def show_statistics_tooltip(self, index, pos):
+  def show_statistics_tooltip(self, index):
     if index < len(self.signals):
         time, amplitude = self.signals[index]
-        max_value = np.max(amplitude)
-        min_value = np.min(amplitude)
-        time_length = time[-1] - time[0]  
+        max_value =round(np.max(amplitude),4)
+        min_value = round(np.min(amplitude),4)
+        time_length = round(time[-1] - time[0],4  )
+        std_deviation = round(np.std(amplitude), 4) 
         speed = self.signalSpeeds[index]
         color = self.signalColors[index]
         statistics_message = {
@@ -305,7 +388,8 @@ class GraphWidget(QtWidgets.QWidget):
         "Min_Value": min_value,
         "Time_Length": time_length,
         "Speed": speed,
-        "Color": color
+        "Color": color,
+        "Std_Deviation": std_deviation
         }
         return statistics_message
 
@@ -355,23 +439,49 @@ class GraphWidget(QtWidgets.QWidget):
             self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
                                 yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
 
-  def slider_moved(self, value):
-      for index in range(self.signalListWidget.count()):
-          item = self.signalListWidget.item(index)
-          if item.isSelected(): 
-              self.currentSignalIndex = index 
-              self.currentPositions[index] = int(value / 100 * len(self.signals[index][0]))
-              time, amplitude = self.signals[index]
-              current_pos = self.currentPositions[index]
+#   def slider_moved(self, value):
+#       for index in range(self.signalListWidget.count()):
+#           item = self.signalListWidget.item(index)
+#           if item.isSelected(): 
+#               self.currentSignalIndex = index 
+#               self.currentPositions[index] = int(value / 100 * len(self.signals[index][0]))
+#               time, amplitude = self.signals[index]
+#               current_pos = self.currentPositions[index]
 
-              if self.signalsLines[index] is None:
-                  pen = pg.mkPen(color=self.signalColors[index], width=2)
-                  self.signalsLines[index] = self.graph.plot(time[:current_pos], amplitude[:current_pos], pen=pen)
-              else:
-                  self.signalsLines[index].setData(time[:current_pos], amplitude[:current_pos])
-             
-              self.signalsLines[index].setPen(pg.mkPen(color=self.signalColors[index], width=2))
-              break 
+#               if self.signalsLines[index] is None:
+#                   pen = pg.mkPen(color=self.signalColors[index], width=2)
+#                   self.signalsLines[index] = self.graph.plot(time[:current_pos], amplitude[:current_pos], pen=pen)
+#               else:
+#                   self.signalsLines[index].setData(time[:current_pos], amplitude[:current_pos])
+#               self.signalsLines[index].setPen(pg.mkPen(color=self.signalColors[index], width=2))
+#               break 
+
+  def backward_clicked(self):
+    self.move_signal(-self.default_step)
+
+  def forward_clicked(self):
+    self.move_signal(self.default_step)
+
+  def move_signal(self, step_factor):
+    for index in range(self.signalListWidget.count()):
+        item = self.signalListWidget.item(index)
+        if item.isSelected(): 
+            self.currentSignalIndex = index 
+
+            # Calculate new position based on step
+            self.currentPositions[index] = max(0, min(len(self.signals[index][0]), self.currentPositions[index] + int(step_factor * len(self.signals[index][0]))))
+            
+            time, amplitude = self.signals[index]
+            current_pos = self.currentPositions[index]
+
+            if self.signalsLines[index] is None:
+                pen = pg.mkPen(color=self.signalColors[index], width=2)
+                self.signalsLines[index] = self.graph.plot(time[:current_pos], amplitude[:current_pos], pen=pen)
+            else:
+                self.signalsLines[index].setData(time[:current_pos], amplitude[:current_pos])
+            
+            self.signalsLines[index].setPen(pg.mkPen(color=self.signalColors[index], width=2))
+            break
 
   def select_color(self):
       color = QtWidgets.QColorDialog.getColor()
@@ -417,8 +527,8 @@ class GraphWidget(QtWidgets.QWidget):
                     self.signalsLines[index].setData(time[:new_pos], amplitude[:new_pos])
 
                 self.currentPositions[index] = new_pos
-                if index == self.currentSignalIndex:
-                    self.mainSlider.setValue(int(new_pos / len(time) * 100))
+                # if index == self.currentSignalIndex:
+                #     self.mainSlider.setValue(int(new_pos / len(time) * 100))
 
   def play_pause(self):
     if self.isPaused:
@@ -438,10 +548,10 @@ class GraphWidget(QtWidgets.QWidget):
   def show_hide(self):
     if  self.is_hidden:
         self.showHideButton.setIcon(self.showIcon)
-        self.is_hidden = True
+        self.is_hidden = False
     else:
         self.showHideButton.setIcon(self.hideIcon)
-        self.is_hidden = False
+        self.is_hidden = True
     self.show_hide_signal()
 
   def change_speed(self):
@@ -463,17 +573,15 @@ class GraphWidget(QtWidgets.QWidget):
         if not self.isPaused:
             self.play_pause()
   def rewind(self):
-        selected_items = self.signalListWidget.selectedItems()
-        for item in selected_items:
-            index = self.signalListWidget.row(item)
-
-            if index < len(self.signalsLines) and self.signalsLines[index] is not None:
-                self.graph.removeItem(self.signalsLines[index])  
-                self.signalsLines[index] = None  
-                self.currentPositions[index] = 0
-                # Remove from legend
-                self.legend.removeItem(item.text())
-
+            self.isPaused = False
+            for index in range(self.signalListWidget.count()):
+                item = self.signalListWidget.item(index)
+                if item.checkState() == QtCore.Qt.CheckState.Checked:
+                    self.currentPositions[index] = 0
+                    if index < len(self.signalsLines) and self.signalsLines[index] is not None:
+                        self.graph.removeItem(self.signalsLines[index])
+                        self.signalsLines[index] = None
+            self.update()
 
 
   def delete_selected_signal(self):
@@ -498,7 +606,6 @@ class GraphWidget(QtWidgets.QWidget):
         current_x_range = self.graph.viewRange()[0]
         current_y_range = self.graph.viewRange()[1]
 
-      # Zoom in by reducing the range by 10%
         new_x_range = (current_x_range[0] + (current_x_range[1] - current_x_range[0]) * 0.1,
                        current_x_range[1] - (current_x_range[1] - current_x_range[0]) * 0.1)
         new_y_range = (current_y_range[0] + (current_y_range[1] - current_y_range[0]) * 0.1,
@@ -511,7 +618,6 @@ class GraphWidget(QtWidgets.QWidget):
         current_x_range = self.graph.viewRange()[0]
         current_y_range = self.graph.viewRange()[1]
 
-      # Zoom out by increasing the range by 10%
         new_x_range = (current_x_range[0] - (current_x_range[1] - current_x_range[0]) * 0.1,
                        current_x_range[1] + (current_x_range[1] - current_x_range[0]) * 0.1)
         new_y_range = (current_y_range[0] - (current_y_range[1] - current_y_range[0]) * 0.1,
@@ -551,7 +657,6 @@ class GraphWidget(QtWidgets.QWidget):
 
             transferFrom.graph.removeItem(transferFrom.signalsLines[index])
             transferFrom.signalsLines[index] = None
-            # transferTo.legend.addItem(transferFrom.sigalsLines[index],transferFrom.signalsLines[index].text())
             transferFrom.legend.removeItem(item.text())
 
             del transferFrom.signals[index]
@@ -562,7 +667,6 @@ class GraphWidget(QtWidgets.QWidget):
             transferFrom.signalListWidget.takeItem(index)
   def connect_real_time_signal(self):
     self.currentPositions.append(0)  
-    print(self.isConnected)
     if self.isConnected:
       itemIsExist=[]
       newItem = "APPL finance"
@@ -584,7 +688,6 @@ class GraphWidget(QtWidgets.QWidget):
       self.timer.timeout.connect(self.fetch_real_time_signal)
       self.timer.start()
     else:
-      print("Exit")
       self.timer.stop()
         
         
@@ -870,7 +973,7 @@ class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.linked = True
+        self.linked = False
 
         self.linkIcon=QtGui.QIcon()
         self.linkIcon.addPixmap(QtGui.QPixmap("./control/pics/solar--link-bold.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -881,26 +984,26 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         self.report_dialog = None
         self.setWindowTitle("Signal Viewer")
-        self.setGeometry(100, 100, 1200, 600)
+        self.setGeometry(100, 100, 1200, 700)
+        self.setMinimumWidth(1200)
 
-        self.original_height = 615
-        self.original_width = 1200
+        self.original_height = 715
 
         self.central_widget = QtWidgets.QWidget()
+
         self.setCentralWidget(self.central_widget)
 
-        # Use QStackedWidget to switch between pages
         self.stack = QtWidgets.QStackedWidget()
         self.verticalBody = QtWidgets.QVBoxLayout(self.central_widget)
         self.verticalBody.addWidget(self.stack)
 
-        # First page with graphs and controls
+       
         self.first_page = QtWidgets.QWidget()
         self.first_page_layout = QtWidgets.QVBoxLayout(self.first_page)
 
-        # Control Layout
+    
         self.controlGraphFrame = QtWidgets.QFrame(self)
-        self.controlGraphFrame.setMinimumHeight(600)
+        self.controlGraphFrame.setMinimumHeight(700)
         self.controlGraphLayout = QtWidgets.QVBoxLayout(self.controlGraphFrame)
 
         self.controlLayout1 = QtWidgets.QHBoxLayout()
@@ -910,12 +1013,9 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.linkButton = QtWidgets.QPushButton()
         self.linkButton.setFixedWidth(50)
         self.linkButton.setFixedHeight(30)
-        self.linkButton.setIcon(self.unLinkIcon)
+        self.linkButton.setIcon(self.linkIcon)
         self.linkButton.clicked.connect(self.toggle_linking)
         self.controlLayout1.addWidget(self.linkButton)
-
-
-
 
         self.linkPlayButton = QtWidgets.QPushButton()
         self.linkPlayButton.setFixedWidth(50)
@@ -934,41 +1034,35 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.controlLayout1.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
         self.controlGraphLayout.addLayout(self.controlLayout1)
         
-        # Toggle Third Graph Button
         self.toggleThirdGraphButton = QtWidgets.QPushButton("Third Graph")
         self.toggleThirdGraphButton.setFixedHeight(30)
         self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
         self.controlLayout1.addWidget(self.toggleThirdGraphButton)
         
-        # Toggle ROI Button
         self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
         self.toggleROIButton.setFixedHeight(30)
         self.toggleROIButton.clicked.connect(self.toggle_roi)
         self.controlLayout1.addWidget(self.toggleROIButton)
 
-        # Non-Rectangle Button to go to the Second Page
         self.NonRegtangle = QtWidgets.QPushButton("Spider Graph")
         self.NonRegtangle.setFixedHeight(30)
-        self.NonRegtangle.clicked.connect(self.show_second_page)  # Connect to the second page
+        self.NonRegtangle.clicked.connect(self.show_second_page)  
         self.controlLayout1.addWidget(self.NonRegtangle)
 
-        # Spacer
-
-        # Graph Layout
         self.graphlayout = QtWidgets.QVBoxLayout()
         self.controlGraphLayout.addLayout(self.graphlayout)
 
-        # First Graph
+        
         self.graphFrame1 = QtWidgets.QFrame(self)
-        self.graphFrame1.setMinimumHeight(250)
+        self.graphFrame1.setMinimumHeight(300)
         self.graphLayout1 = QtWidgets.QVBoxLayout(self.graphFrame1)
         self.graphBox1 = GraphWidget(self)
         self.graphLayout1.addWidget(self.graphBox1)
         self.graphlayout.addWidget(self.graphFrame1)
 
-        # Second Graph
+    
         self.graphFrame2 = QtWidgets.QFrame(self)
-        self.graphFrame2.setMinimumHeight(250)
+        self.graphFrame2.setMinimumHeight(300)
         self.graphLayout2 = QtWidgets.QVBoxLayout(self.graphFrame2)
         self.graphBox2 = GraphWidget(self)
         self.graphLayout2.addWidget(self.graphBox2)
@@ -979,7 +1073,6 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.linkPlayButton.setIcon(self.graphBox1.playIcon)
         self.linkRewindButton.setIcon(self.graphBox1.replayIcon)
 
-        # Glue Layout
         self.glueFrame = QtWidgets.QFrame(self)
 
         self.glueFrame.setMinimumHeight(300)
@@ -989,7 +1082,6 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.glue_tool_box.setFixedWidth(250)
         self.glue_tool_box.setMinimumHeight(250)
 
-        # Report for third graph
         self.report_layout= QtWidgets.QHBoxLayout()
         reportIcon = QtGui.QIcon()
         reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
@@ -1000,17 +1092,15 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         self.report_layout.addWidget(self.thirdGraphReportButton)
         self.glue_tool_box_layout.addWidget(self.thirdGraphReportButton)
-        # Clear Third Graph Button
+
         self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
         self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
         self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
 
-        # Glue Signals Button
         self.glueButton = QtWidgets.QPushButton("Glue Signals")
         self.glueButton.clicked.connect(self.glue_signals)
         self.glue_tool_box_layout.addWidget(self.glueButton)
 
-        # Gap Slider
         gap_slider_layout=QtWidgets.QHBoxLayout()
         gap_label = QtWidgets.QLabel("Gap : ")
         self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
@@ -1021,17 +1111,14 @@ class SignalViewer(QtWidgets.QMainWindow):
         gap_slider_layout.addWidget(self.gap_slider)
         self.glue_tool_box_layout.addLayout(gap_slider_layout)
 
-        # Interpolation Dropdown
         self.interpolation_dropdown = QtWidgets.QComboBox()
         self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])
         self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
         self.glue_tool_box_layout.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
 
-        # Third Graph
         self.thirdGraph = pg.PlotWidget()
         self.thirdGraph.showGrid(x=True, y=True)
 
-        # Third Graph Container
         self.thirdGraph_container = QtWidgets.QFrame(self)
         self.thirdGraph_layout = QtWidgets.QHBoxLayout()
         self.thirdGraph_layout.setSpacing(20)
@@ -1047,46 +1134,76 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         self.first_page_layout.addWidget(self.glueFrame)
         self.glueFrame.setVisible(False)
-        self.stack.addWidget(self.first_page)  # Add first page to the stack
+        self.stack.addWidget(self.first_page)  
 
-        # Timer
         self.timer = QtCore.QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.update_graphs)
         self.timer.start()
 
-        # Create instance of NonRecPage and add to the stack
         self.second_page = NonRecPage(self)
-        self.stack.addWidget(self.second_page)  # Add second page to the stack
+        self.stack.addWidget(self.second_page)  
+
+    def alignSpeed(self):
+        speed = self.graphBox1.signalSpeeds[0]
+        for item in self.graphBox1.signalListWidget.selectedItems():
+            index = self.graphBox1.signalListWidget.row(item)
+            self.graphBox1.signalSpeeds[index] = speed
+
+        for item in self.graphBox2.signalListWidget.selectedItems():
+            index = self.graphBox2.signalListWidget.row(item)
+            self.graphBox2.signalSpeeds[index] = speed
 
     def play_linked(self):
-        if self.graphBox1.isPaused:
-            self.graphBox1.playPauseButton.setIcon(self.graphBox1.pauseIcon)
-            self.graphBox2.playPauseButton.setIcon(self.graphBox2.pauseIcon)
-        else:
-            self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
-            self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
-        self.graphBox1.isPaused = not self.graphBox1.isPaused
-        self.graphBox2.isPaused = not self.graphBox2.isPaused
+
+        speed=self.graphBox1.signalSpeeds[0]
+        for item in self.graphBox1.signalListWidget.selectedItems():
+            index = self.graphBox1.signalListWidget.row(item)
+            self.graphBox1.signalSpeeds[index] = speed
+
+        for item in self.graphBox2.signalListWidget.selectedItems():
+            index = self.graphBox2.signalListWidget.row(item)
+            self.graphBox2.signalSpeeds[index] = speed
+
+        if self.linked:
+            if self.graphBox1.isPaused:
+                self.graphBox1.playPauseButton.setIcon(self.graphBox1.pauseIcon)
+                self.graphBox2.playPauseButton.setIcon(self.graphBox2.pauseIcon)
+            else:
+                self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
+                self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
+            self.graphBox1.isPaused = not self.graphBox1.isPaused
+            self.graphBox2.isPaused = not self.graphBox2.isPaused
 
     def rewind_linked(self):
-        if self.graphBox1.isPaused:
-            self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
-            self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
-        self.graphBox1.isPaused = False
-        self.graphBox2.isPaused = False
-        self.graphBox1.rewind()
-        self.graphBox2.rewind()
+
+        if self.linked:
+            if self.graphBox1.isPaused:
+                self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
+                self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
+            self.graphBox1.isPaused = False
+            self.graphBox2.isPaused = False
+            self.graphBox1.rewind()
+            self.graphBox2.rewind()
 
     def toggle_linking(self):
+        
+
         if self.linked:
-            # Unlink the axes
+            self.graphBox1.playPauseButton.setDisabled(False)
+            self.graphBox2.playPauseButton.setDisabled(False)
+            self.graphBox1.replayButton.setDisabled(False)
+            self.graphBox2.replayButton.setDisabled(False)
+            self.graphBox2.controlLayout1.setEnabled(False)
             self.graphBox2.graph.setXLink(None)
             self.graphBox2.graph.setYLink(None)
             self.linkButton.setIcon(self.linkIcon)
             self.linked = False
         else:
-            # Relink the axes
+            self.graphBox1.playPauseButton.setDisabled(True)
+            self.graphBox2.playPauseButton.setDisabled(True)
+            self.graphBox1.replayButton.setDisabled(True)
+            self.graphBox2.replayButton.setDisabled(True)
             self.graphBox2.graph.setXLink(self.graphBox1.graph)
             self.graphBox2.graph.setYLink(self.graphBox1.graph)
             self.linkButton.setIcon(self.unLinkIcon)
@@ -1108,13 +1225,13 @@ class SignalViewer(QtWidgets.QMainWindow):
         if self.glueFrame.isVisible():
             self.glueFrame.setVisible(False)
             self.first_page_layout.removeWidget(self.glueFrame)
+            self.setFixedHeight( self.original_height)
             self.toggleThirdGraphButton.setText("Third Graph")
-            self.setFixedSize(self.original_width, self.original_height)
         else:
             self.first_page_layout.addWidget(self.glueFrame)
             self.glueFrame.setVisible(True)
             self.toggleThirdGraphButton.setText("Third Graph")
-            self.setFixedSize(self.original_width, self.original_height + 300)
+            self.setFixedHeight( self.original_height+ 300)
 
 
     def toggle_roi(self):
