@@ -38,14 +38,7 @@ class ReportDialog(QtWidgets.QDialog):
         self.screenshotButton = QtWidgets.QPushButton("Add Screenshot")
         self.screenshotButton.clicked.connect(self.add_screenshot_to_report)
         self.layout.addWidget(self.screenshotButton)
-
-        self.showStatisticsButton = QtWidgets.QPushButton("Show Statistics")
-        self.showStatisticsButton.clicked.connect(self.show_statistics_table)
-        self.layout.addWidget(self.showStatisticsButton)
         
-        
-        
-
     def show_statistics_table(self):
         selectedIndecies = self.graph.parent().signalListWidget.selectedIndexes()
         if len(selectedIndecies) > 0:
@@ -59,12 +52,12 @@ class ReportDialog(QtWidgets.QDialog):
             
             keyword_format = QtGui.QTextCharFormat()
             keyword_format.setFontWeight(QtGui.QFont.Weight.Bold)
-            keyword_format.setFontPointSize(11)
+            keyword_format.setFontPointSize(9)
             keyword_format.setForeground(QtGui.QColor("blue"))
 
             value_format = QtGui.QTextCharFormat()
             value_format.setFontWeight(QtGui.QFont.Weight.Bold)
-            value_format.setFontPointSize(11)
+            value_format.setFontPointSize(9)
             value_format.setForeground(QtGui.QColor("black"))
             
             def insert_formatted_text(keyword, value):
