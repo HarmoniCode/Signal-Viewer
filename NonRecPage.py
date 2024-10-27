@@ -3,7 +3,6 @@ import pandas as pd
 from PyQt6 import QtWidgets, QtCore,QtGui
 from PyQt6.QtCore import Qt
 import numpy as np
-import yfinance as yf
 
 class NonRecPage(QtWidgets.QWidget):
     def __init__(self, parent):
@@ -32,7 +31,7 @@ class NonRecPage(QtWidgets.QWidget):
 
         horizontal_control=QtWidgets.QHBoxLayout()
         backIcon=QtGui.QIcon()
-        backIcon.addPixmap(QtGui.QPixmap("./control/pics/bx--arrow-back.png"),QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
+        backIcon.addPixmap(QtGui.QPixmap("./Icons/pics/bx--arrow-back.png"),QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
         self.back_to_first_page_button = QtWidgets.QPushButton()
         self.back_to_first_page_button.setIcon(backIcon)
         self.back_to_first_page_button.setMinimumHeight(30)
@@ -86,7 +85,7 @@ class NonRecPage(QtWidgets.QWidget):
         upload_button = QtWidgets.QPushButton(f' Upload CSV')
         upload_button.setMinimumHeight(30)
         self.uploadIcon = QtGui.QIcon()
-        self.uploadIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--upload.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.uploadIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--upload.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         upload_button.setIcon(self.uploadIcon)
         upload_button.clicked.connect(lambda: self.load_csv(radar_plot, plot_num))
         controlBox1.addWidget(upload_button)
@@ -105,14 +104,14 @@ class NonRecPage(QtWidgets.QWidget):
         cine_control_layout = QtWidgets.QHBoxLayout()
         backward_button = QtWidgets.QPushButton()
         self.backwardIcon = QtGui.QIcon()
-        self.backwardIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--backward.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.backwardIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--backward.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         backward_button.setIcon(self.backwardIcon)
         backward_button.clicked.connect(lambda: self.backward_plot(radar_plot, plot_num))
         cine_control_layout.addWidget(backward_button)
 
         play_button = QtWidgets.QPushButton()
         self.playIcon = QtGui.QIcon()
-        self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.playIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--play.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         play_button.setIcon(self.playIcon)
 
         play_button.clicked.connect(lambda: self.play_plot(timer, plot_num))
@@ -120,21 +119,21 @@ class NonRecPage(QtWidgets.QWidget):
 
         forward_button = QtWidgets.QPushButton()
         self.forwardIcon = QtGui.QIcon()
-        self.forwardIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--forward.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.forwardIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--forward.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         forward_button.setIcon(self.forwardIcon)
         forward_button.clicked.connect(lambda: self.forward_plot(radar_plot, plot_num))
         cine_control_layout.addWidget(forward_button)
 
         pause_button = QtWidgets.QPushButton()
         self.pauseIcon = QtGui.QIcon()
-        self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.pauseIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--pause.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         pause_button.setIcon(self.pauseIcon)
         pause_button.clicked.connect(lambda: self.pause_plot(timer, plot_num))
         cine_control_layout.addWidget(pause_button)
 
         stop_button = QtWidgets.QPushButton()
         self.replayIcon = QtGui.QIcon()
-        self.replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+        self.replayIcon.addPixmap(QtGui.QPixmap("./Icons/pics/mdi--replay.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         stop_button.setIcon(self.replayIcon)
         stop_button.clicked.connect(lambda: self.stop_plot(radar_plot, plot_num))
         cine_control_layout.addWidget(stop_button)

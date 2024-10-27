@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets, QtCore,QtGui
 import scipy.interpolate as interp
+from scipy.interpolate import Akima1DInterpolator
 import pyqtgraph as pg
 import numpy as np
 import sys
@@ -11,26 +12,26 @@ class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowIcon(QtGui.QIcon("./control/pics/logo.png"))
-
         self.linked = False
-
-        self.linkIcon=QtGui.QIcon()
-        self.linkIcon.addPixmap(QtGui.QPixmap("./control/pics/solar--link-bold.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-
-        self.unLinkIcon=QtGui.QIcon()
-        self.unLinkIcon.addPixmap(QtGui.QPixmap("./control/pics/fa-solid--unlink.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-
-
         self.report_dialog = None
+        self.original_height = 715
+
+        self.setWindowIcon(QtGui.QIcon("./Icons/pics/logo.png"))
         self.setWindowTitle("Signal Viewer")
         self.setGeometry(100, 100, 1200, 700)
         self.setMinimumWidth(1200)
 
-        self.original_height = 715
+
+        self.linkIcon=QtGui.QIcon()
+        self.linkIcon.addPixmap(QtGui.QPixmap("./Icons/pics/solar--link-bold.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+        self.unLinkIcon=QtGui.QIcon()
+        self.unLinkIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fa-solid--unlink.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+        reportIcon = QtGui.QIcon()
+        reportIcon.addPixmap(QtGui.QPixmap("./Icons/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
 
         self.central_widget = QtWidgets.QWidget()
-
         self.setCentralWidget(self.central_widget)
 
         self.stack = QtWidgets.QStackedWidget()
@@ -39,16 +40,14 @@ class SignalViewer(QtWidgets.QMainWindow):
 
        
         self.first_page = QtWidgets.QWidget()
-        self.first_page_layout = QtWidgets.QVBoxLayout(self.first_page)
+        self.firstPageLayout = QtWidgets.QVBoxLayout(self.first_page)
 
-    
         self.controlGraphFrame = QtWidgets.QFrame(self)
         self.controlGraphFrame.setMinimumHeight(700)
         self.controlGraphLayout = QtWidgets.QVBoxLayout(self.controlGraphFrame)
 
         self.controlLayout1 = QtWidgets.QHBoxLayout()
         self.controlLayout1.setContentsMargins(10, 0, 0, 0)
-
 
         self.linkButton = QtWidgets.QPushButton()
         self.linkButton.setFixedWidth(50)
@@ -58,6 +57,7 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.controlLayout1.addWidget(self.linkButton)
 
         self.linkPlayButton = QtWidgets.QPushButton()
+        self.linkPlayButton.setIcon(QtGui.QIcon("./Icons/pics/fontisto--play.png"))
         self.linkPlayButton.setFixedWidth(50)
         self.linkPlayButton.setFixedHeight(30)
 
@@ -65,6 +65,7 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.controlLayout1.addWidget(self.linkPlayButton)
         
         self.linkRewindButton = QtWidgets.QPushButton()
+        self.linkRewindButton.setIcon(QtGui.QIcon("./Icons/pics/mdi--replay.png"))
         self.linkRewindButton.setFixedWidth(50)
         self.linkRewindButton.setFixedHeight(30)
 
@@ -108,72 +109,67 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.graphLayout2.addWidget(self.graphBox2)
         self.graphlayout.addWidget(self.graphFrame2)
 
-        self.first_page_layout.addWidget(self.controlGraphFrame)
+        self.firstPageLayout.addWidget(self.controlGraphFrame)
         
-        self.linkPlayButton.setIcon(self.graphBox1.playIcon)
-        self.linkRewindButton.setIcon(self.graphBox1.replayIcon)
-
         self.glueFrame = QtWidgets.QFrame(self)
 
         self.glueFrame.setMinimumHeight(300)
-        self.glue_layout = QtWidgets.QHBoxLayout(self.glueFrame)
-        self.glue_tool_box_layout = QtWidgets.QVBoxLayout()
-        self.glue_tool_box = QtWidgets.QFrame(self)
-        self.glue_tool_box.setFixedWidth(250)
-        self.glue_tool_box.setMinimumHeight(250)
+        self.glueLayout = QtWidgets.QHBoxLayout(self.glueFrame)
+        self.glueToolBoxLayout = QtWidgets.QVBoxLayout()
+        self.glueToolBox = QtWidgets.QFrame(self)
+        self.glueToolBox.setFixedWidth(250)
+        self.glueToolBox.setMinimumHeight(250)
 
-        self.report_layout= QtWidgets.QHBoxLayout()
-        reportIcon = QtGui.QIcon()
-        reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal,QtGui.QIcon.State.On)
+        self.reportLayout= QtWidgets.QHBoxLayout()
+        
         self.thirdGraphReportButton = QtWidgets.QPushButton()
         self.thirdGraphReportButton.setFixedWidth(50)
         self.thirdGraphReportButton.setIcon(reportIcon)
         self.thirdGraphReportButton.clicked.connect(self.open_report_dialog)
 
-        self.report_layout.addWidget(self.thirdGraphReportButton)
-        self.glue_tool_box_layout.addWidget(self.thirdGraphReportButton)
+        self.reportLayout.addWidget(self.thirdGraphReportButton)
+        self.glueToolBoxLayout.addWidget(self.thirdGraphReportButton)
 
         self.clearThirdGraphButton = QtWidgets.QPushButton("Clear Third Graph")
         self.clearThirdGraphButton.clicked.connect(self.clear_third_graph)
-        self.glue_tool_box_layout.addWidget(self.clearThirdGraphButton)
+        self.glueToolBoxLayout.addWidget(self.clearThirdGraphButton)
 
         self.glueButton = QtWidgets.QPushButton("Glue Signals")
         self.glueButton.clicked.connect(self.glue_signals)
 
-        self.glue_tool_box_layout.addWidget(self.glueButton)
+        self.glueToolBoxLayout.addWidget(self.glueButton)
 
-        gap_slider_layout=QtWidgets.QHBoxLayout()
+        gapSliderLayout=QtWidgets.QHBoxLayout()
         gap_label = QtWidgets.QLabel("Gap : ")
-        self.gap_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.gap_slider.setMinimum(-100)
-        self.gap_slider.setMaximum(100)
-        self.gap_slider.setValue(0)
-        gap_slider_layout.addWidget(gap_label)
-        gap_slider_layout.addWidget(self.gap_slider)
-        self.glue_tool_box_layout.addLayout(gap_slider_layout)
+        self.gapSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self.gapSlider.setMinimum(-100)
+        self.gapSlider.setMaximum(100)
+        self.gapSlider.setValue(0)
+        gapSliderLayout.addWidget(gap_label)
+        gapSliderLayout.addWidget(self.gapSlider)
+        self.glueToolBoxLayout.addLayout(gapSliderLayout)
 
-        self.interpolation_dropdown = QtWidgets.QComboBox()
-        self.interpolation_dropdown.addItems(["Linear", "Cubic", "Nearest"])
-        self.glue_tool_box_layout.addWidget(self.interpolation_dropdown)
-        self.glue_tool_box_layout.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
+        self.interpolationDropdown = QtWidgets.QComboBox()
+        self.interpolationDropdown.addItems(["Linear", "Cubic", "Nearest"])
+        self.glueToolBoxLayout.addWidget(self.interpolationDropdown)
+        self.glueToolBoxLayout.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
 
         self.thirdGraph = pg.PlotWidget()
         self.thirdGraph.showGrid(x=True, y=True)
 
-        self.thirdGraph_container = QtWidgets.QFrame(self)
-        self.thirdGraph_layout = QtWidgets.QHBoxLayout()
-        self.thirdGraph_layout.setSpacing(20)
-        self.thirdGraph_container.setLayout(self.thirdGraph_layout)
-        self.thirdGraph_container.layout().addWidget(self.thirdGraph)
+        self.thirdGraphContainer = QtWidgets.QFrame(self)
+        self.thirdGraphLayout = QtWidgets.QHBoxLayout()
+        self.thirdGraphLayout.setSpacing(20)
+        self.thirdGraphContainer.setLayout(self.thirdGraphLayout)
+        self.thirdGraphContainer.layout().addWidget(self.thirdGraph)
 
-        # Glue Tool Box Layout
-        self.glue_tool_box.setLayout(self.glue_tool_box_layout)
-        self.thirdGraph_container.layout().addWidget(self.glue_tool_box)
-        self.glue_layout.addWidget(self.thirdGraph_container)
-        self.thirdGraph_container.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
-        self.thirdGraph_container.setVisible(True)
+        self.glueToolBox.setLayout(self.glueToolBoxLayout)
+        self.thirdGraphContainer.layout().addWidget(self.glueToolBox)
+        self.glueLayout.addWidget(self.thirdGraphContainer)
+        self.thirdGraphContainer.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        self.thirdGraphContainer.setVisible(True)
 
-        self.first_page_layout.addWidget(self.glueFrame)
+        self.firstPageLayout.addWidget(self.glueFrame)
         self.glueFrame.setVisible(False)
         self.stack.addWidget(self.first_page)  
 
@@ -182,10 +178,10 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_graphs)
         self.timer.start()
 
-        self.second_page = NonRecPage(self)
-        self.stack.addWidget(self.second_page)  
+        self.secondPage = NonRecPage(self)
+        self.stack.addWidget(self.secondPage)  
 
-    def alignSpeed(self):
+    def align_speed(self):
         speed = self.graphBox1.signalSpeeds[0]
         for item in self.graphBox1.signalListWidget.selectedItems():
             index = self.graphBox1.signalListWidget.row(item)
@@ -196,29 +192,21 @@ class SignalViewer(QtWidgets.QMainWindow):
             self.graphBox2.signalSpeeds[index] = speed
 
     def play_linked(self):
-
-        speed=self.graphBox1.signalSpeeds[0]
-        for item in self.graphBox1.signalListWidget.selectedItems():
-            index = self.graphBox1.signalListWidget.row(item)
-            self.graphBox1.signalSpeeds[index] = speed
-
-        for item in self.graphBox2.signalListWidget.selectedItems():
-            index = self.graphBox2.signalListWidget.row(item)
-            self.graphBox2.signalSpeeds[index] = speed
-
         if self.linked:
-            if self.graphBox1.isPaused:
-                self.graphBox1.playPauseButton.setIcon(self.graphBox1.pauseIcon)
-                self.graphBox2.playPauseButton.setIcon(self.graphBox2.pauseIcon)
-            else:
-                self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
-                self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
-            self.graphBox1.isPaused = not self.graphBox1.isPaused
-            self.graphBox2.isPaused = not self.graphBox2.isPaused
+          self.align_speed()
+
+          if self.graphBox1.isPaused:
+              self.graphBox1.playPauseButton.setIcon(self.graphBox1.pauseIcon)
+              self.graphBox2.playPauseButton.setIcon(self.graphBox2.pauseIcon)
+          else:
+              self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
+              self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
+          self.graphBox1.isPaused = not self.graphBox1.isPaused
+          self.graphBox2.isPaused = not self.graphBox2.isPaused
 
     def rewind_linked(self):
-
         if self.linked:
+            self.align_speed()
             if self.graphBox1.isPaused:
                 self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
                 self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
@@ -228,13 +216,12 @@ class SignalViewer(QtWidgets.QMainWindow):
             self.graphBox2.rewind()
 
     def toggle_linking(self):
-        
 
         if self.linked:
             self.graphBox1.playPauseButton.setDisabled(False)
             self.graphBox2.playPauseButton.setDisabled(False)
-            self.graphBox1.replayButton.setDisabled(False)
-            self.graphBox2.replayButton.setDisabled(False)
+            self.graphBox1.rewindButton.setDisabled(False)
+            self.graphBox2.rewindButton.setDisabled(False)
             self.graphBox2.controlLayout1.setEnabled(False)
             self.graphBox2.graph.setXLink(None)
             self.graphBox2.graph.setYLink(None)
@@ -243,8 +230,8 @@ class SignalViewer(QtWidgets.QMainWindow):
         else:
             self.graphBox1.playPauseButton.setDisabled(True)
             self.graphBox2.playPauseButton.setDisabled(True)
-            self.graphBox1.replayButton.setDisabled(True)
-            self.graphBox2.replayButton.setDisabled(True)
+            self.graphBox1.rewindButton.setDisabled(True)
+            self.graphBox2.rewindButton.setDisabled(True)
             self.graphBox2.graph.setXLink(self.graphBox1.graph)
             self.graphBox2.graph.setYLink(self.graphBox1.graph)
             self.linkButton.setIcon(self.unLinkIcon)
@@ -252,7 +239,7 @@ class SignalViewer(QtWidgets.QMainWindow):
 
 
     def show_second_page(self):
-        self.stack.setCurrentWidget(self.second_page)
+        self.stack.setCurrentWidget(self.secondPage)
 
     def show_first_page(self):
         self.stack.setCurrentWidget(self.first_page)
@@ -265,11 +252,11 @@ class SignalViewer(QtWidgets.QMainWindow):
     def toggle_third_graph(self):
         if self.glueFrame.isVisible():
             self.glueFrame.setVisible(False)
-            self.first_page_layout.removeWidget(self.glueFrame)
+            self.firstPageLayout.removeWidget(self.glueFrame)
             self.setFixedHeight( self.original_height)
             self.toggleThirdGraphButton.setText("Third Graph")
         else:
-            self.first_page_layout.addWidget(self.glueFrame)
+            self.firstPageLayout.addWidget(self.glueFrame)
             self.glueFrame.setVisible(True)
             self.toggleThirdGraphButton.setText("Third Graph")
             self.setFixedHeight( self.original_height+ 300)
@@ -291,15 +278,29 @@ class SignalViewer(QtWidgets.QMainWindow):
     def glue_signals(self):
         range1 = self.graphBox1.selected_range
         range2 = self.graphBox2.selected_range
-
+        color1 = self.graphBox1.signalColors[0]
+        color2 = self.graphBox2.signalColors[0]
         subsignal1 = self.extract_signal(self.graphBox1, range1)
         subsignal2 = self.extract_signal(self.graphBox2, range2)
 
-        gap = self.gap_slider.value()  
-        interpolation_order = self.interpolation_dropdown.currentText()  
-        glued_signal = self.process_gap_or_overlap(subsignal1, subsignal2, gap, interpolation_order)
-        time = np.arange(len(glued_signal))
-        self.thirdGraph.plot(time, glued_signal, pen=pg.mkPen('b', width=2))
+
+
+        gap = self.gapSlider.value()  
+        interpolationOrder = self.interpolationDropdown.currentText()  
+        gluedSignal = self.process_gap_or_overlap(subsignal1, subsignal2, gap, interpolationOrder)
+        if gap>0:
+            self.thirdGraph.plot(np.arange(0, len(gluedSignal), 1), gluedSignal, pen=pg.mkPen('b', width=2))
+            self.thirdGraph.plot(subsignal1, pen=pg.mkPen(color1, width=2))
+            self.thirdGraph.plot(np.arange(len(subsignal1)+gap, len(gluedSignal), 1), subsignal2, pen=pg.mkPen(color2, width=2))
+        else:
+            overlap = abs(gap)
+            overlap_start = len(subsignal1) - overlap
+            
+            self.thirdGraph.plot(np.arange(0, len(gluedSignal)), gluedSignal, pen=pg.mkPen('b', width=2))
+            self.thirdGraph.plot(np.arange(0, overlap_start), subsignal1[:overlap_start], pen=pg.mkPen(color1, width=2))
+            self.thirdGraph.plot(np.arange(len(subsignal1), len(gluedSignal)), subsignal2[overlap:], pen=pg.mkPen(color2, width=2))
+                
+        
 
     def extract_signal(self, graph_widget, selected_range):
         time, amplitude = graph_widget.signals[0]  
@@ -308,16 +309,15 @@ class SignalViewer(QtWidgets.QMainWindow):
 
     def process_gap_or_overlap(self, subsignal1, subsignal2, gap, interpolation_order):
       if gap > 0:
-          
         interpolation_range = np.linspace(0, gap - 1, gap)
         if interpolation_order == "Linear":
             gap_signal = np.linspace(subsignal1[-1], subsignal2[0], gap)
         elif interpolation_order == "Cubic":
-            if len(subsignal1) >= 2 and len(subsignal2) >= 2:
-                x_points = [-1, 0, 1, 2]  
-                y_points = [subsignal1[-2], subsignal1[-1], subsignal2[0], subsignal2[1]]
-                cubic_interp = interp.interp1d(x_points, y_points, kind='cubic')
-                gap_signal = cubic_interp(np.linspace(0, 1, gap))  
+            if len(subsignal1) >= 3 and len(subsignal2) >= 3:
+              x_points = [-2,-1, 0, 1, 2,3]
+              y_points = [subsignal1[-3],subsignal1[-2], subsignal1[-1], subsignal2[0], subsignal2[1],subsignal2[2]]
+              akima_interp = Akima1DInterpolator(x_points, y_points)
+              gap_signal = akima_interp(np.linspace(0, 1, gap))
             else:
                 print("Not enough data points for cubic interpolation.")
                 return None  
@@ -328,10 +328,6 @@ class SignalViewer(QtWidgets.QMainWindow):
 
       else:
           overlap = abs(gap)
-          if len(subsignal1) < overlap or len(subsignal2) < overlap:
-              print("Overlap too large for the signals.")
-              return None  
-
           
           if overlap > len(subsignal1) or overlap > len(subsignal2):
               overlap = min(len(subsignal1), len(subsignal2))  

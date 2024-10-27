@@ -10,11 +10,11 @@ class ReportDialog(QtWidgets.QDialog):
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.textEdit = QtWidgets.QTextEdit()
-        default_font = QtGui.QFont()
-        default_font.setPointSize(14)  
-        default_font.setWeight(50)  
-        default_font.setFamily("Arial")  
-        self.textEdit.setFont(default_font)
+        defaultFont = QtGui.QFont()
+        defaultFont.setPointSize(14)  
+        defaultFont.setWeight(50)  
+        defaultFont.setFamily("Arial")  
+        self.textEdit.setFont(defaultFont)
         self.textEdit.setStyleSheet("QTextEdit { padding: 10px; }")  
 
         self.layout.addWidget(self.textEdit)

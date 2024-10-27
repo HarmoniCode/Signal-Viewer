@@ -20,6 +20,65 @@ class GraphWidget(QtWidgets.QWidget):
     self.isConnected = False
     self.is_hidden = False
 
+    self.signals = []
+    self.signalsLines = []
+    self.currentPositions = []
+    self.signalColors = []
+    self.signalSpeeds = []
+
+    self.default_step = 0.05
+    self.selectedColor = (255, 0, 0)
+    self.defaultSpeed = 10
+    self.currentSignalIndex = None 
+
+    loadIcon = QtGui.QIcon()
+    loadIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--upload.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.connectIcon = QtGui.QIcon()
+    self.connectIcon.addPixmap(QtGui.QPixmap("./Icons/pics/material-symbols--wifi.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.disconnectIcon = QtGui.QIcon()
+    self.disconnectIcon.addPixmap(QtGui.QPixmap("./Icons/pics/clarity--disconnected-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    reportIcon = QtGui.QIcon()
+    reportIcon.addPixmap(QtGui.QPixmap("./Icons/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    self.pauseIcon = QtGui.QIcon()
+    self.pauseIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--pause.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.playIcon = QtGui.QIcon()
+    self.playIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--play.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    self.replayIcon = QtGui.QIcon()
+    self.replayIcon.addPixmap(QtGui.QPixmap("./Icons/pics/mdi--replay.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    deleteIcon = QtGui.QIcon()
+    deleteIcon.addPixmap(QtGui.QPixmap("./Icons/pics/ic--baseline-delete.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    trnasferIcon = QtGui.QIcon()
+    trnasferIcon.addPixmap(QtGui.QPixmap("./Icons/pics/gg--arrows-exchange-alt-v.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    zoomINIcon = QtGui.QIcon()
+    zoomINIcon.addPixmap(QtGui.QPixmap("./Icons/pics/raphael--zoomin.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    zooOutIcon = QtGui.QIcon()
+    zooOutIcon.addPixmap(QtGui.QPixmap("./Icons/pics/raphael--zoomout.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    colorIcon = QtGui.QIcon()
+    colorIcon.addPixmap(QtGui.QPixmap("./Icons/pics/bxs--color-fill.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.showIcon = QtGui.QIcon()
+    self.showIcon.addPixmap(QtGui.QPixmap("./Icons/pics/streamline--visible.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
+    self.hideIcon = QtGui.QIcon()
+    self.hideIcon.addPixmap(QtGui.QPixmap("./Icons/pics/streamline--invisible-1-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    self.forwardIcon = QtGui.QIcon()
+    self.forwardIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--forward.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    self.backwardIcon = QtGui.QIcon()
+    self.backwardIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--backward.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
     self.graph = pg.PlotWidget()
     self.graph.showGrid(x=True, y=True)
     self.graphLayout = QtWidgets.QVBoxLayout()
@@ -27,44 +86,30 @@ class GraphWidget(QtWidgets.QWidget):
     self.graphLayout.addWidget(self.graph)
     self.layout.addLayout(self.graphLayout)
 
-    self.legend = pg.LegendItem(offset=(70, 20))
-    self.legend.setParentItem(self.graph.graphicsItem())
-
     self.signalFrame = QtWidgets.QFrame(self)
     self.signalFrame.setFixedWidth(250)
+    self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
+    self.signalLayout.setContentsMargins(0, 0, 0, 0) 
     self.layout.addWidget(self.signalFrame)
+
+    # self.legend = pg.LegendItem(offset=(70, 20))
+    # self.legend.setParentItem(self.graph.graphicsItem())
 
     self.roi = pg.LinearRegionItem()
     self.roi.setZValue(10)
     self.roi.setRegion([0, 0.4])
     self.roi.hide()
-
     self.graph.addItem(self.roi)
 
-    self.signalLayout = QtWidgets.QVBoxLayout(self.signalFrame)
-    self.signalLayout.setContentsMargins(0, 0, 0, 0) 
-
-    self.signals = []
-    self.signalsLines = []
-    self.currentPositions = []
-    self.signalColors = []
-    self.signalSpeeds = []
-
-
     self.controlLayout3 = QtWidgets.QHBoxLayout()
-    loadIcon = QtGui.QIcon()
-    loadIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--upload.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
     self.loadSignalButton = QtWidgets.QPushButton()
     self.loadSignalButton.setFixedWidth(50)
     self.loadSignalButton.setIcon(loadIcon)
     self.loadSignalButton.clicked.connect(self.load_signal)
     self.controlLayout3.addWidget(self.loadSignalButton)
 
-    self.connectIcon = QtGui.QIcon()
-    self.connectIcon.addPixmap(QtGui.QPixmap("./control/pics/material-symbols--wifi.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     
-    self.disconnectIcon = QtGui.QIcon()
-    self.disconnectIcon.addPixmap(QtGui.QPixmap("./control/pics/clarity--disconnected-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     
     self.connectRealTimeSignalButton = QtWidgets.QPushButton()
     self.connectRealTimeSignalButton.setIcon(self.connectIcon)
@@ -74,8 +119,7 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.controlLayout3.addSpacerItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
 
-    reportIcon = QtGui.QIcon()
-    reportIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--file.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
     self.reportButton = QtWidgets.QPushButton()
     self.reportButton.setFixedWidth(50)
     self.reportButton.setIcon(reportIcon)
@@ -88,6 +132,8 @@ class GraphWidget(QtWidgets.QWidget):
     
     self.signalListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
     self.signalListWidget.itemChanged.connect(self.update_play_button_state)
+    self.signalListWidget.itemDoubleClicked.connect(self.edit_signal_name)
+    self.signalListWidget.itemChanged.connect(self.update_signal_name)
     self.signalLayout.addWidget(self.signalListWidget)
 
     self.controlLayout1 = QtWidgets.QHBoxLayout()
@@ -115,41 +161,41 @@ class GraphWidget(QtWidgets.QWidget):
     self.cineModeLayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
     self.graphLayout.addLayout(self.cineModeLayout)
 
-    self.pauseIcon = QtGui.QIcon()
-    self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-    self.playIcon = QtGui.QIcon()
-    self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
     self.playPauseButton = QtWidgets.QPushButton()
     self.playPauseButton.setFixedWidth(50)
     self.playPauseButton.setIcon(self.pauseIcon)
     self.playPauseButton.clicked.connect(self.play_pause)
 
-    self.replayIcon = QtGui.QIcon()
-    self.replayIcon.addPixmap(QtGui.QPixmap("./control/pics/mdi--replay.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-    self.replayButton = QtWidgets.QPushButton()
-    self.replayButton.setFixedWidth(50)
-    self.replayButton.setIcon(self.replayIcon)
-    self.replayButton.clicked.connect(self.rewind)
-    self.cineModeLayout.addWidget(self.replayButton)
+    
+    self.rewindButton = QtWidgets.QPushButton()
+    self.rewindButton.setFixedWidth(50)
+    self.rewindButton.setIcon(self.replayIcon)
+    self.rewindButton.clicked.connect(self.rewind)
+    self.cineModeLayout.addWidget(self.rewindButton)
     
 
-    clearIcon = QtGui.QIcon()
-    clearIcon.addPixmap(QtGui.QPixmap("./control/pics/ic--baseline-clear (1).png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-    self.clearButton = QtWidgets.QPushButton()
-    self.clearButton.setIcon(clearIcon)
-    self.clearButton.clicked.connect(self.clear_selected_graph)
-    self.controlLayout1.addWidget(self.clearButton)
+    # clearIcon = QtGui.QIcon()
+    # clearIcon.addPixmap(QtGui.QPixmap("./Icons/pics/ic--baseline-clear (1).png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    # self.clearButton = QtWidgets.QPushButton()
+    # self.clearButton.setIcon(clearIcon)
+    # self.clearButton.clicked.connect(self.clear_selected_graph)
+    # self.controlLayout1.addWidget(self.clearButton)
 
-    deleteIcon = QtGui.QIcon()
-    deleteIcon.addPixmap(QtGui.QPixmap("./control/pics/ic--baseline-delete.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    self.showHideButton = QtWidgets.QPushButton()
+    self.showHideButton.setIcon(self.showIcon)
+    self.showHideButton.clicked.connect(self.show_hide)
+    self.controlLayout1.addWidget(self.showHideButton)
+
+    
     self.deleteButton = QtWidgets.QPushButton()
     self.deleteButton.setIcon(deleteIcon)
     self.deleteButton.clicked.connect(self.delete_selected_signal)
     self.controlLayout1.addWidget(self.deleteButton)
 
     self.transferButton = QtWidgets.QPushButton()
-    trnasferIcon = QtGui.QIcon()
-    trnasferIcon.addPixmap(QtGui.QPixmap("./control/pics/gg--arrows-exchange-alt-v.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
+    
     self.transferButton.setIcon(trnasferIcon)
     self.transferButton.clicked.connect(self.transfer_signal)
     self.controlLayout1.addWidget(self.transferButton)
@@ -159,43 +205,29 @@ class GraphWidget(QtWidgets.QWidget):
     self.controlLayout2 = QtWidgets.QHBoxLayout()
     self.controlLayout2.setContentsMargins(0, 0, 0, 0) 
 
-    zoomINIcon = QtGui.QIcon()
-    zoomINIcon.addPixmap(QtGui.QPixmap("./control/pics/raphael--zoomin.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
     self.zoomInButton = QtWidgets.QPushButton()
     self.zoomInButton.setIcon(zoomINIcon)
     self.zoomInButton.clicked.connect(self.zoom_in)
     self.controlLayout2.addWidget(self.zoomInButton)
 
-    zooOutIcon = QtGui.QIcon()
-    zooOutIcon.addPixmap(QtGui.QPixmap("./control/pics/raphael--zoomout.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
     self.zoomOutButton = QtWidgets.QPushButton()
     self.zoomOutButton.setIcon(zooOutIcon)
     self.zoomOutButton.clicked.connect(self.zoom_out)
     self.controlLayout2.addWidget(self.zoomOutButton)
 
-
-
-
-
-    colorIcon = QtGui.QIcon()
-    colorIcon.addPixmap(QtGui.QPixmap("./control/pics/bxs--color-fill.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
     self.colorButton = QtWidgets.QPushButton()
     self.colorButton.setIcon(colorIcon)
     self.colorButton.clicked.connect(self.select_color)
     self.controlLayout2.addWidget(self.colorButton)
 
     self.signalLayout.addLayout(self.controlLayout2)
-    self.showIcon = QtGui.QIcon()
-    self.showIcon.addPixmap(QtGui.QPixmap("./control/pics/streamline--visible.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+
     
-    self.hideIcon = QtGui.QIcon()
-    self.hideIcon.addPixmap(QtGui.QPixmap("./control/pics/streamline--invisible-1-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
 
-    self.showHideButton = QtWidgets.QPushButton()
-    self.showHideButton.setFixedWidth(50)
-    self.showHideButton.setIcon(self.showIcon)
-    self.showHideButton.clicked.connect(self.show_hide)
-
+    
     
     # self.cineModePanel = QtWidgets.QHBoxLayout()
     # self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
@@ -217,7 +249,7 @@ class GraphWidget(QtWidgets.QWidget):
     # Create Backward Button
     self.backWardButton = QtWidgets.QPushButton()
     self.backWardButton.setFixedWidth(50)
-    self.backWardButton.setIcon(QtGui.QIcon("./control/pics/fontisto--backward.png"))
+    self.backWardButton.setIcon(self.backwardIcon)
     self.backWardButton.clicked.connect(self.backward_clicked)
     self.cineModeLayout.addWidget(self.backWardButton)
 
@@ -226,21 +258,13 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.forwardButton = QtWidgets.QPushButton()
     self.forwardButton.setFixedWidth(50)
-    self.forwardButton.setIcon(QtGui.QIcon("./control/pics/fontisto--forward.png"))
+    self.forwardButton.setIcon(self.forwardIcon)
     self.forwardButton.clicked.connect(self.forward_clicked)
     self.cineModeLayout.addWidget(self.forwardButton)
 
-    self.cineModeLayout.addWidget(self.showHideButton)
-
     self.signalLayout.addLayout(self.cineModePanel)
-    self.default_step = 0.05
-
-
 
     self.playPauseButton.setEnabled(False)
-
-    self.selectedColor = (255, 0, 0)
-    self.defaultSpeed = 10
 
     self.roi.sigRegionChanged.connect(self.on_roi_changed)
 
@@ -253,8 +277,8 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.signalListWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
     self.signalListWidget.customContextMenuRequested.connect(self.show_context_menu)
+    self.oldName=None
 
-    self.currentSignalIndex = None 
 
   def auto_scroll_x_axis(self, x):
     """Auto-scroll the x-axis as the signal progresses."""
@@ -294,10 +318,8 @@ class GraphWidget(QtWidgets.QWidget):
 
             self.update_play_button_state()
 
-            pen = pg.mkPen(color=self.selectedColor, width=2)
-            line_item = self.graph.plot(time, amplitude, pen=pen)
-            self.signalsLines.append(line_item)
-            self.legend.addItem(line_item, signalName)
+            # legend_line = pg.PlotDataItem([0, 1], [0, 0], pen=pg.mkPen(color=self.selectedColor, width=2))
+            # self.legend.addItem(legend_line, signalName)
 
             x_padding = (max(time) - min(time)) * 0.05  
             y_padding = (max(amplitude) - min(amplitude)) * 0.05  
@@ -315,7 +337,6 @@ class GraphWidget(QtWidgets.QWidget):
         
         for index in range(self.signalListWidget.count()):
             item = self.signalListWidget.item(index)
-            
             if item.checkState() == QtCore.Qt.CheckState.Checked:
                 time, amplitude = self.signals[index]
                 current_pos = self.currentPositions[index]
@@ -476,19 +497,19 @@ class GraphWidget(QtWidgets.QWidget):
         index = self.signalListWidget.row(item)
         self.signalSpeeds[index] = self.speedSlider.value() 
 
-  def clear_selected_graph(self):
-        selected_items = self.signalListWidget.selectedItems()
-        for item in selected_items:
-            index = self.signalListWidget.row(item)
+#   def clear_selected_graph(self):
+#         selected_items = self.signalListWidget.selectedItems()
+#         for item in selected_items:
+#             index = self.signalListWidget.row(item)
 
-            if index < len(self.signalsLines) and self.signalsLines[index] is not None:
-                self.graph.removeItem(self.signalsLines[index])  
-                self.signalsLines[index] = None  
-                self.currentPositions[index] = 0
-                # Remove from legend
-                self.legend.removeItem(item.text())
-        if not self.isPaused:
-            self.play_pause()
+#             if index < len(self.signalsLines) and self.signalsLines[index] is not None:
+#                 self.graph.removeItem(self.signalsLines[index])  
+#                 self.signalsLines[index] = None  
+#                 self.currentPositions[index] = 0
+#                 # Remove from legend
+#                 self.legend.removeItem(item.text())
+#         if not self.isPaused:
+#             self.play_pause()
   def rewind(self):
             self.graph.setXRange(0, 1 , padding=10)
             self.isPaused = False
@@ -518,7 +539,7 @@ class GraphWidget(QtWidgets.QWidget):
                 self.graph.removeItem(self.signalsLines[index])  
                 del self.signalsLines[index]
                 # Remove from legend
-                self.legend.removeItem(item.text())
+                # self.legend.removeItem(item.text())
 
   def zoom_in(self):
         current_x_range = self.graph.viewRange()[0]
@@ -613,7 +634,13 @@ class GraphWidget(QtWidgets.QWidget):
             self.timer.start()
         else:
             self.timer.stop()
-
+  def edit_signal_name(self, item):
+        item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsEditable)
+        self.signalListWidget.editItem(item)
+  def update_signal_name(self, item):
+        index = self.signalListWidget.row(item)
+        if index < len(self.signals):
+            item = QtWidgets.QListWidgetItem(item.text())
   def fetch_real_time_signal(self):
         ticker = yf.Ticker("AAPL")
         real_time_data = ticker.info
