@@ -52,7 +52,7 @@ class NonRecPage(QtWidgets.QWidget):
 
         horizontal_control = QtWidgets.QHBoxLayout()
         backIcon = QtGui.QIcon()
-        backIcon.addPixmap(QtGui.QPixmap("./control/pics/bx--arrow-back.png"), QtGui.QIcon.Mode.Normal,
+        backIcon.addPixmap(QtGui.QPixmap("./Icons/pics/bx--arrow-back.png"), QtGui.QIcon.Mode.Normal,
                            QtGui.QIcon.State.On)
         self.back_to_first_page_button = QtWidgets.QPushButton()
         self.back_to_first_page_button.setIcon(backIcon)
@@ -85,7 +85,7 @@ class NonRecPage(QtWidgets.QWidget):
         cine_control_layout = QtWidgets.QHBoxLayout()
         backward_button = QtWidgets.QPushButton()
         self.backwardIcon = QtGui.QIcon()
-        self.backwardIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--backward.png"),
+        self.backwardIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--backward.png"),
                                     QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         backward_button.setIcon(self.backwardIcon)
         backward_button.clicked.connect(self.backward_waveform)
@@ -93,7 +93,7 @@ class NonRecPage(QtWidgets.QWidget):
 
         play_button = QtWidgets.QPushButton()
         self.playIcon = QtGui.QIcon()
-        self.playIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--play.png"),
+        self.playIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--play.png"),
                                 QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         play_button.setIcon(self.playIcon)
         play_button.clicked.connect(self.play_waveform)
@@ -101,7 +101,7 @@ class NonRecPage(QtWidgets.QWidget):
 
         forward_button = QtWidgets.QPushButton()
         self.forwardIcon = QtGui.QIcon()
-        self.forwardIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--forward.png"),
+        self.forwardIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--forward.png"),
                                    QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         forward_button.setIcon(self.forwardIcon)
         forward_button.clicked.connect(self.forward_waveform)
@@ -109,7 +109,7 @@ class NonRecPage(QtWidgets.QWidget):
 
         pause_button = QtWidgets.QPushButton()
         self.pauseIcon = QtGui.QIcon()
-        self.pauseIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--pause.png"),
+        self.pauseIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--pause.png"),
                                  QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         pause_button.setIcon(self.pauseIcon)
         pause_button.clicked.connect(self.pause_waveform)
@@ -120,7 +120,7 @@ class NonRecPage(QtWidgets.QWidget):
         upload_button = QtWidgets.QPushButton('Upload CSV')
         upload_button.setMinimumHeight(30)
         self.uploadIcon = QtGui.QIcon()
-        self.uploadIcon.addPixmap(QtGui.QPixmap("./control/pics/fontisto--upload.png"),
+        self.uploadIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--upload.png"),
                                   QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
         upload_button.setIcon(self.uploadIcon)
         upload_button.clicked.connect(self.load_csv)
