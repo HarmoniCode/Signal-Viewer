@@ -65,13 +65,7 @@ class GraphWidget(QtWidgets.QWidget):
     
     self.disconnectIcon = QtGui.QIcon()
     self.disconnectIcon.addPixmap(QtGui.QPixmap("./control/pics/clarity--disconnected-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-    
-    self.connectRealTimeSignalButton = QtWidgets.QPushButton()
-    self.connectRealTimeSignalButton.setIcon(self.connectIcon)
-    self.connectRealTimeSignalButton.setFixedWidth(50)
-    self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
-    self.controlLayout3.addWidget(self.connectRealTimeSignalButton)
-
+   
     self.controlLayout3.addSpacerItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
 
     reportIcon = QtGui.QIcon()
@@ -214,7 +208,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.cineModePanel = QtWidgets.QHBoxLayout()
     self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
 
-    # Create Backward Button
     self.backWardButton = QtWidgets.QPushButton()
     self.backWardButton.setFixedWidth(50)
     self.backWardButton.setIcon(QtGui.QIcon("./control/pics/fontisto--backward.png"))
@@ -454,14 +447,6 @@ class GraphWidget(QtWidgets.QWidget):
         self.playPauseButton.setIcon(self.playIcon)
     self.isPaused = not self.isPaused
 
-  def connect_stop(self):
-        if  not self.isConnected:
-            self.connectRealTimeSignalButton.setIcon(self.disconnectIcon)
-            self.isConnected = True
-        else:
-            self.connectRealTimeSignalButton.setIcon(self.connectIcon)
-            self.isConnected = False
-        self.connect_real_time_signal()
   def show_hide(self):
     if  self.is_hidden:
         self.showHideButton.setIcon(self.showIcon)
@@ -585,50 +570,9 @@ class GraphWidget(QtWidgets.QWidget):
             del transferFrom.currentPositions[index]
             del transferFrom.signalColors[index]
             del transferFrom.signalSpeeds[index]
-            transferFrom.signalListWidget.takeItem(index)
-  def connect_real_time_signal(self):
-        if self.isConnected:
-            itemIsExist = []
-            newItem = "AAPL finance"
-            item = QtWidgets.QListWidgetItem(newItem)
-            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
-            item.setCheckState(QtCore.Qt.CheckState.Unchecked)
-            
-            for index in range(self.signalListWidget.count()):
-                if self.signalListWidget.item(index).text() == newItem:
-                    itemIsExist.append(True)      
-                else:  
-                    itemIsExist.append(False)
-            if True in itemIsExist:
-                pass
-            else:
-                self.signalListWidget.addItem(item)     
-            
-            self.times = []  
-            self.prices = []  
-            
-            self.timer = QtCore.QTimer()  
-            self.timer.setInterval(1000)  
-            self.timer.timeout.connect(self.fetch_real_time_signal)
-            self.timer.start()
-        else:
-            self.timer.stop()
-
-  def fetch_real_time_signal(self):
-        ticker = yf.Ticker("AAPL")
-        real_time_data = ticker.info
-        currentTime = time.time()
-        
-        self.prices.append(real_time_data['currentPrice'])
-        self.times.append(currentTime)
-        
-        if not hasattr(self, 'real_time_plot'):  
-            pen = mkPen(color=self.selectedColor, width=2, style=QtCore.Qt.PenStyle.SolidLine)
-            self.real_time_plot = self.graph.plot(self.times, self.prices, pen=pen)
-        else:
-            self.real_time_plot.setData(self.times, self.prices) 
+            transferFrom.signalListWidget.takeItem(index)           
   
-  def show_hide_signal(self):
+    def show_hide_signal(self):
         selected_items = self.signalListWidget.selectedItems()
         for item in selected_items:
                 index = self.signalListWidget.row(item)
