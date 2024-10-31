@@ -6,12 +6,15 @@ import numpy as np
 import sys
 from ReportDialog import ReportDialog
 from GraphWidget import GraphWidget
-from NonRecPage import NonRecPage
-from RealTimeSignalPage import RealTimeSignalPage
+from SecondPage import SecondPage
+# from RealTimeSignalPage import RealTimeSignalPage
 
 class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        with open("./Styles/main.qss", "r") as f:
+            self.setStyleSheet(f.read())
+        
 
         self.linked = False
         self.report_dialog = None
@@ -76,25 +79,27 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.controlLayout1.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
         self.controlGraphLayout.addLayout(self.controlLayout1)
         
-        self.toggleThirdGraphButton = QtWidgets.QPushButton("Third Graph")
-        self.toggleThirdGraphButton.setFixedHeight(30)
-        self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
-        self.controlLayout1.addWidget(self.toggleThirdGraphButton)
+        # self.toggleThirdGraphButton = QtWidgets.QPushButton("Third Graph")
+        # self.toggleThirdGraphButton.setFixedHeight(30)
+        # self.toggleThirdGraphButton.clicked.connect(self.toggle_third_graph)
+        # self.controlLayout1.addWidget(self.toggleThirdGraphButton)
         
         self.toggleROIButton = QtWidgets.QPushButton("Show ROI")
         self.toggleROIButton.setFixedHeight(30)
+        self.toggleROIButton.setFixedWidth(100)
         self.toggleROIButton.clicked.connect(self.toggle_roi)
         self.controlLayout1.addWidget(self.toggleROIButton)
 
-        self.NonRegtangle = QtWidgets.QPushButton("Spider Graph")
+        self.NonRegtangle = QtWidgets.QPushButton("Next Page")
         self.NonRegtangle.setFixedHeight(30)
+        self.NonRegtangle.setFixedWidth(100)
         self.NonRegtangle.clicked.connect(self.show_second_page)  
         self.controlLayout1.addWidget(self.NonRegtangle)
         
-        self.RealSignal = QtWidgets.QPushButton("Connect")
-        self.RealSignal.setFixedHeight(30)
-        self.RealSignal.clicked.connect(self.show_real_signal_page)  
-        self.controlLayout1.addWidget(self.RealSignal)
+        # self.RealSignal = QtWidgets.QPushButton("Connect")
+        # self.RealSignal.setFixedHeight(30)
+        # self.RealSignal.clicked.connect(self.show_real_signal_page)  
+        # self.controlLayout1.addWidget(self.RealSignal)
 
         self.graphlayout = QtWidgets.QVBoxLayout()
         self.controlGraphLayout.addLayout(self.graphlayout)
@@ -176,7 +181,7 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.thirdGraphContainer.setVisible(True)
 
         self.firstPageLayout.addWidget(self.glueFrame)
-        self.glueFrame.setVisible(False)
+        # self.glueFrame.setVisible(False)
         self.stack.addWidget(self.first_page)  
 
         self.timer = QtCore.QTimer()
@@ -184,11 +189,11 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_graphs)
         self.timer.start()
 
-        self.secondPage = NonRecPage(self)
+        self.secondPage = SecondPage(self)
         self.stack.addWidget(self.secondPage)  
 
-        self.real_signal_page = RealTimeSignalPage(self)
-        self.stack.addWidget(self.real_signal_page)  
+        # self.real_signal_page = RealTimeSignalPage(self)
+        # self.stack.addWidget(self.real_signal_page)  
 
     # def align_speed(self):
     #     self.real_signal_page = RealTimeSignalPage(self)
@@ -232,6 +237,8 @@ class SignalViewer(QtWidgets.QMainWindow):
     def toggle_linking(self):
 
         if self.linked:
+            self.graphBox1.controlLayout1.setEnabled(False)
+            self.graphBox1.controlLayout2.setEnabled(False)
             self.graphBox1.playPauseButton.setDisabled(False)
             self.graphBox2.playPauseButton.setDisabled(False)
             self.graphBox1.rewindButton.setDisabled(False)
@@ -242,6 +249,8 @@ class SignalViewer(QtWidgets.QMainWindow):
             self.linkButton.setIcon(self.linkIcon)
             self.linked = False
         else:
+            self.graphBox1.controlLayout1.setEnabled(True)
+            self.graphBox1.controlLayout2.setEnabled(True)
             self.graphBox1.playPauseButton.setDisabled(True)
             self.graphBox2.playPauseButton.setDisabled(True)
             self.graphBox1.rewindButton.setDisabled(True)
@@ -255,8 +264,8 @@ class SignalViewer(QtWidgets.QMainWindow):
     def show_second_page(self):
         self.stack.setCurrentWidget(self.secondPage)
         
-    def show_real_signal_page(self):
-        self.stack.setCurrentWidget(self.real_signal_page)
+    # def show_real_signal_page(self):
+    #     self.stack.setCurrentWidget(self.real_signal_page)
    
 
     def show_first_page(self):
@@ -277,7 +286,7 @@ class SignalViewer(QtWidgets.QMainWindow):
             self.firstPageLayout.addWidget(self.glueFrame)
             self.glueFrame.setVisible(True)
             self.toggleThirdGraphButton.setText("Third Graph")
-            self.setFixedHeight( self.original_height+ 300)
+            # self.resize( self.width(),self.original_height+ 300)
 
 
     def toggle_roi(self):
@@ -369,9 +378,9 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.graphBox1.update()
         self.graphBox2.update()
 
+app = QtWidgets.QApplication(sys.argv)
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
     viewer = SignalViewer()
     viewer.show()
     sys.exit(app.exec())

@@ -1,0 +1,36 @@
+/* QFrame{
+    
+} */
+
+QFrame#general_real_time_signal_frame,#general_radar_frame{
+    background-color: #f0f0f0;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+}
+
+
+QPushButton {
+    background-color:   rgb(88, 160, 255);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 5px;
+    padding: 10px 0;
+    height: 15px;
+}
+
+QPushButton:hover {
+    background-color:#8cb6ec;
+}
+QPushButton:disabled {
+    background-color: #ccc;
+    color: #666;
+}
+
+
+
+QListWidget {
+background-color: white;
+border: 1px solid #ccc;
+border-radius: 5px;
+}

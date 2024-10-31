@@ -1,0 +1,41 @@
+QPushButton {
+  background-color: #8cb6ec;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  border-radius: 5px;
+  padding: 10px 0;
+  height: 10px;
+}
+
+QPushButton:hover {
+  background-color: #b1ccf0;
+}
+
+QPushButton:disabled {
+  background-color: #ccc;
+  color: #666;
+}
+
+QComboBox {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 7px;
+}
+
+QComboBox::drop-down {
+  subcontrol-origin: padding;
+  subcontrol-position: top right;
+  width: 25px;
+  border-left-width: 1px;
+  border-left-color: darkgray;
+  border-left-style: solid;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  background-color: #2196f3;
+}
+
+QComboBox::down-arrow {
+  width: 15px;
+  height: 15px;
+}
