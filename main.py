@@ -22,8 +22,8 @@ class SignalViewer(QtWidgets.QMainWindow):
 
         self.setWindowIcon(QtGui.QIcon("./Icons/pics/logo.png"))
         self.setWindowTitle("Signal Viewer")
-        self.setGeometry(100, 100, 1200, 700)
-        self.setMinimumWidth(1200)
+        self.setGeometry(100, 100, 1100, 700)
+        self.setMinimumWidth(1100)
 
 
         self.linkIcon=QtGui.QIcon()

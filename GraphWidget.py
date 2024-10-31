@@ -588,16 +588,26 @@ class GraphWidget(QtWidgets.QWidget):
             newItem.setCheckState(QtCore.Qt.CheckState.Unchecked)
             transferTo.signalListWidget.addItem(newItem)
 
-            transferFrom.graph.removeItem(transferFrom.signalsLines[index])
-            transferFrom.signalsLines[index] = None
+            if transferFrom.signalsLines[index] is not None:
+                transferFrom.graph.removeItem(transferFrom.signalsLines[index])
 
             del transferFrom.signals[index]
-            del transferFrom.signalsLines[index]
             del transferFrom.currentPositions[index]
             del transferFrom.signalColors[index]
             del transferFrom.signalSpeeds[index]
+            del transferFrom.signalsLines[index]
 
             transferFrom.signalListWidget.takeItem(index)
+
+            for i in range(index, len(transferFrom.signals)):
+                if transferFrom.signalsLines[i] is not None:
+                    transferFrom.signalsLines[i].setData(transferFrom.signals[i][0][:transferFrom.currentPositions[i]], transferFrom.signals[i][1][:transferFrom.currentPositions[i]])
+
+            for i in range(len(transferTo.signals)):
+                if len(transferTo.signalsLines) <= i:
+                    transferTo.signalsLines.append(None)
+                if transferTo.signalsLines[i] is not None:
+                    transferTo.signalsLines[i].setData(transferTo.signals[i][0][:transferTo.currentPositions[i]], transferTo.signals[i][1][:transferTo.currentPositions[i]])
 
             # transferFrom.signalListWidget.takeItem(index)           
             # transferFrom.signalListWidget.takeItem(index)
