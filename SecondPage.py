@@ -222,7 +222,7 @@ class SecondPage(QtWidgets.QWidget):
         self.is_playing1 = False
         self.is_playing2 = False
         self.timer_interval = 100
-        self.data_chunk_size = 5
+        self.data_chunk_size = 10
 
     def create_controls(self, plot_number):
         control_layout = QtWidgets.QHBoxLayout()
@@ -390,11 +390,3 @@ class SecondPage(QtWidgets.QWidget):
 
     def back_to_first_page(self):
         self.parent.show_first_page()
-
-# if __name__ == '__main__':
-#     app = QApplication([])
-#     main_window = QMainWindow()
-#     non_rec_page = NonRecPage(main_window)
-#     main_window.setCentralWidget(non_rec_page)
-#     main_window.show()
-#     app.exec()
