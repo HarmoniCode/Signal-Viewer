@@ -117,6 +117,9 @@ class GraphWidget(QtWidgets.QWidget):
     self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
     self.controlLayout3.addWidget(self.connectRealTimeSignalButton)
 
+    self.disconnectIcon = QtGui.QIcon()
+    self.disconnectIcon.addPixmap(QtGui.QPixmap("./control/pics/clarity--disconnected-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+   
     self.controlLayout3.addSpacerItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum))
 
     
@@ -246,7 +249,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.cineModePanel = QtWidgets.QHBoxLayout()
     self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
 
-    # Create Backward Button
     self.backWardButton = QtWidgets.QPushButton()
     self.backWardButton.setFixedWidth(50)
     self.backWardButton.setIcon(self.backwardIcon)
@@ -475,14 +477,6 @@ class GraphWidget(QtWidgets.QWidget):
         self.playPauseButton.setIcon(self.playIcon)
     self.isPaused = not self.isPaused
 
-  def connect_stop(self):
-        if  not self.isConnected:
-            self.connectRealTimeSignalButton.setIcon(self.disconnectIcon)
-            self.isConnected = True
-        else:
-            self.connectRealTimeSignalButton.setIcon(self.connectIcon)
-            self.isConnected = False
-        self.connect_real_time_signal()
   def show_hide(self):
     if  self.is_hidden:
         self.showHideButton.setIcon(self.showIcon)
@@ -606,6 +600,7 @@ class GraphWidget(QtWidgets.QWidget):
             del transferFrom.currentPositions[index]
             del transferFrom.signalColors[index]
             del transferFrom.signalSpeeds[index]
+            transferFrom.signalListWidget.takeItem(index)           
             transferFrom.signalListWidget.takeItem(index)
   def connect_real_time_signal(self):
         if self.isConnected:
@@ -655,7 +650,7 @@ class GraphWidget(QtWidgets.QWidget):
         else:
             self.real_time_plot.setData(self.times, self.prices) 
   
-  def show_hide_signal(self):
+    def show_hide_signal(self):
         selected_items = self.signalListWidget.selectedItems()
         for item in selected_items:
                 index = self.signalListWidget.row(item)

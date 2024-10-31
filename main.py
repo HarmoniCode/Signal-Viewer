@@ -7,6 +7,7 @@ import sys
 from ReportDialog import ReportDialog
 from GraphWidget import GraphWidget
 from NonRecPage import NonRecPage
+from RealTimeSignalPage import RealTimeSignalPage
 
 class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
@@ -89,6 +90,11 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.NonRegtangle.setFixedHeight(30)
         self.NonRegtangle.clicked.connect(self.show_second_page)  
         self.controlLayout1.addWidget(self.NonRegtangle)
+        
+        self.RealSignal = QtWidgets.QPushButton("Connect")
+        self.RealSignal.setFixedHeight(30)
+        self.RealSignal.clicked.connect(self.show_real_signal_page)  
+        self.controlLayout1.addWidget(self.RealSignal)
 
         self.graphlayout = QtWidgets.QVBoxLayout()
         self.controlGraphLayout.addLayout(self.graphlayout)
@@ -182,6 +188,11 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.stack.addWidget(self.secondPage)  
 
     def align_speed(self):
+        self.real_signal_page = RealTimeSignalPage(self)
+        self.stack.addWidget(self.real_signal_page)  
+        
+
+    def alignSpeed(self):
         speed = self.graphBox1.signalSpeeds[0]
         for item in self.graphBox1.signalListWidget.selectedItems():
             index = self.graphBox1.signalListWidget.row(item)
@@ -239,7 +250,11 @@ class SignalViewer(QtWidgets.QMainWindow):
 
 
     def show_second_page(self):
-        self.stack.setCurrentWidget(self.secondPage)
+        self.stack.setCurrentWidget(self.second_page)
+        
+    def show_real_signal_page(self):
+        self.stack.setCurrentWidget(self.real_signal_page)
+   
 
     def show_first_page(self):
         self.stack.setCurrentWidget(self.first_page)
