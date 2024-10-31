@@ -57,6 +57,7 @@ class GraphWidget(QtWidgets.QWidget):
 
     trnasferIcon = QtGui.QIcon()
     trnasferIcon.addPixmap(QtGui.QPixmap("./Icons/pics/gg--arrows-exchange-alt-v.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    
 
     zoomINIcon = QtGui.QIcon()
     zoomINIcon.addPixmap(QtGui.QPixmap("./Icons/pics/raphael--zoomin.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -65,7 +66,7 @@ class GraphWidget(QtWidgets.QWidget):
     zooOutIcon.addPixmap(QtGui.QPixmap("./Icons/pics/raphael--zoomout.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
 
     colorIcon = QtGui.QIcon()
-    colorIcon.addPixmap(QtGui.QPixmap("./Icons/pics/bxs--color-fill.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
+    colorIcon.addPixmap(QtGui.QPixmap("./Icons/pics/color-icon.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
     
     self.showIcon = QtGui.QIcon()
     self.showIcon.addPixmap(QtGui.QPixmap("./Icons/pics/streamline--visible.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -80,6 +81,7 @@ class GraphWidget(QtWidgets.QWidget):
     self.backwardIcon.addPixmap(QtGui.QPixmap("./Icons/pics/fontisto--backward.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
 
     self.graph = pg.PlotWidget()
+    # self.graph.addLegend()
     self.graph.showGrid(x=True, y=True)
     self.graphLayout = QtWidgets.QVBoxLayout()
     self.graphLayout.setSpacing(0)
@@ -185,6 +187,7 @@ class GraphWidget(QtWidgets.QWidget):
 
     
     self.transferButton.setIcon(trnasferIcon)
+    self.transferButton.setIconSize(QtCore.QSize(20, 20))
     self.transferButton.clicked.connect(self.transfer_signal)
     self.controlLayout1.addWidget(self.transferButton)
 
@@ -319,7 +322,7 @@ class GraphWidget(QtWidgets.QWidget):
                         self.signalsLines[index].setData(time[:new_pos], amplitude[:new_pos])
 
                     self.currentPositions[index] = new_pos
-                    self.auto_scroll_x_axis(time[int(new_pos)])
+                    self.auto_scroll_x_axis(time[int(new_pos) - 1])
                     # if index == self.currentSignalIndex:
                     #     self.mainSlider.setValue(int(new_pos / len(time) * 100))
 
