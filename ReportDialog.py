@@ -7,7 +7,6 @@ class ReportDialog(QtWidgets.QDialog):
         self.graph = graph  
         self.setWindowTitle("Create Report")
         self.setMinimumSize(500, 500)
-
         self.layout = QtWidgets.QVBoxLayout(self)
         self.textEdit = QtWidgets.QTextEdit()
         defaultFont = QtGui.QFont()
@@ -16,16 +15,14 @@ class ReportDialog(QtWidgets.QDialog):
         defaultFont.setFamily("Arial")  
         self.textEdit.setFont(defaultFont)
         self.textEdit.setStyleSheet("QTextEdit { padding: 10px; }")  
-
         self.layout.addWidget(self.textEdit)
         self.exportButton = QtWidgets.QPushButton("Export")
         self.exportButton.clicked.connect(self.export_report)
         self.layout.addWidget(self.exportButton)
-
         self.screenshotButton = QtWidgets.QPushButton("Add Screenshot")
         self.screenshotButton.clicked.connect(self.add_screenshot_to_report)
         self.layout.addWidget(self.screenshotButton)
-        
+
     def show_statistics_table(self):
         selectedIndecies = self.graph.parent().signalListWidget.selectedIndexes()
         if len(selectedIndecies) > 0:
@@ -67,9 +64,18 @@ class ReportDialog(QtWidgets.QDialog):
         screen = QtGui.QGuiApplication.primaryScreen()
         screenshot = screen.grabWindow(graph_widget.winId(), graph_rect.x(), graph_rect.y(), graph_rect.width() - 10, graph_rect.height() - 10)
         resized_screenshot = screenshot.scaled(600, 400, QtCore.Qt.AspectRatioMode.KeepAspectRatio, QtCore.Qt.TransformationMode.SmoothTransformation)
+        
+        buffer = QtCore.QBuffer()
+        buffer.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
+        resized_screenshot.save(buffer, "PNG")
+        base64_image = buffer.data().toBase64().data().decode()
+        buffer.close()
+        
+        html_image = f'<img src="data:image/png;base64,{base64_image}" width="600" height="400">'
         cursor = self.textEdit.textCursor()
-        cursor.insertImage(resized_screenshot.toImage(), "Screenshot")  
+        cursor.insertHtml(html_image)
         self.textEdit.setTextCursor(cursor)
+        
         self.show_statistics_table()
 
     def export_report(self):

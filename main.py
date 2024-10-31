@@ -7,13 +7,12 @@ import sys
 from ReportDialog import ReportDialog
 from GraphWidget import GraphWidget
 from SecondPage import SecondPage
-# from RealTimeSignalPage import RealTimeSignalPage
 
 class SignalViewer(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         with open("./Styles/main.qss", "r") as f:
-            self.setStyleSheet(f.read())
+            self.setStyleSheet(f.read())    
         
 
         self.linked = False
@@ -276,6 +275,8 @@ class SignalViewer(QtWidgets.QMainWindow):
             parent_pos = self.mapToGlobal(self.pos())
             self.report_dialog.move(parent_pos.x() + self.width(), parent_pos.y())
         self.report_dialog.show()
+        self.report_dialog.raise_()
+        self.report_dialog.activateWindow()
     def toggle_third_graph(self):
         if self.glueFrame.isVisible():
             self.glueFrame.setVisible(False)
