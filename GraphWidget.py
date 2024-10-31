@@ -109,14 +109,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.loadSignalButton.clicked.connect(self.load_signal)
     self.controlLayout3.addWidget(self.loadSignalButton)
 
-    
-    
-    # self.connectRealTimeSignalButton = QtWidgets.QPushButton()
-    # self.connectRealTimeSignalButton.setIcon(self.connectIcon)
-    # self.connectRealTimeSignalButton.setFixedWidth(50)
-    # self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
-    # self.controlLayout3.addWidget(self.connectRealTimeSignalButton)
-
     self.disconnectIcon = QtGui.QIcon()
     self.disconnectIcon.addPixmap(QtGui.QPixmap("./control/pics/clarity--disconnected-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
    
@@ -178,13 +170,6 @@ class GraphWidget(QtWidgets.QWidget):
     self.cineModeLayout.addWidget(self.rewindButton)
     
 
-    # clearIcon = QtGui.QIcon()
-    # clearIcon.addPixmap(QtGui.QPixmap("./Icons/pics/ic--baseline-clear (1).png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
-    # self.clearButton = QtWidgets.QPushButton()
-    # self.clearButton.setIcon(clearIcon)
-    # self.clearButton.clicked.connect(self.clear_selected_graph)
-    # self.controlLayout1.addWidget(self.clearButton)
-
     self.showHideButton = QtWidgets.QPushButton()
     self.showHideButton.setIcon(self.showIcon)
     self.showHideButton.clicked.connect(self.show_hide)
@@ -228,23 +213,6 @@ class GraphWidget(QtWidgets.QWidget):
 
     self.signalLayout.addLayout(self.controlLayout2)
 
-    
-
-    
-    
-    # self.cineModePanel = QtWidgets.QHBoxLayout()
-    # self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
-    # self.backWard = QtWidgets.QLabel("Backward")
-    # self.cineModePanel.addWidget(self.backWard)
-    # self.mainSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-    # self.mainSlider.setMinimum(0)
-    # self.mainSlider.setMaximum(100)
-    # self.mainSlider.setValue(0)
-    # self.mainSlider.valueChanged.connect(self.slider_moved)
-    # self.cineModePanel.addWidget(self.mainSlider)
-    # self.forwardLabel = QtWidgets.QLabel("Forward")
-    # self.cineModePanel.addWidget(self.forwardLabel)
-    # self.signalLayout.addLayout(self.cineModePanel)
 
     self.cineModePanel = QtWidgets.QHBoxLayout()
     self.cineModePanel.setContentsMargins(0, 0, 0, 0)  
@@ -295,42 +263,42 @@ class GraphWidget(QtWidgets.QWidget):
 
 
   def load_signal(self):
-        filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, None, None, "CSV Files (*.csv)")
-        if filePath:
-            time, amplitude = [], []
-            with open(filePath, 'r') as csvfile:
-                csv_reader = csv.reader(csvfile, delimiter=',')
-                for row in csv_reader:
-                    if len(row) == 2:
-                        time.append(float(row[0]))
-                        amplitude.append(float(row[1]))
+    filePath, _ = QtWidgets.QFileDialog.getOpenFileName(self, None, None, "CSV Files (*.csv)")
+    if filePath:
+        time, amplitude = [], []
+        with open(filePath, 'r') as csvfile:
+            csv_reader = csv.reader(csvfile, delimiter=',')
+            for row in csv_reader:
+                if len(row) == 2:
+                    time.append(float(row[0]))
+                    amplitude.append(float(row[1]))
 
-            time = np.array(time)
-            amplitude = np.array(amplitude)
-            self.signals.append((time, amplitude))
-            signalName = (filePath.split('/')[-1]).split('.')[0]
-            item = QtWidgets.QListWidgetItem(signalName)
-            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
-            item.setCheckState(QtCore.Qt.CheckState.Checked)
-            self.signalListWidget.addItem(item)
+        time = np.array(time)
+        amplitude = np.array(amplitude)
+        self.signals.append((time, amplitude))
+        signalName = (filePath.split('/')[-1]).split('.')[0]
+        item = QtWidgets.QListWidgetItem(signalName)
+        item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
+        item.setCheckState(QtCore.Qt.CheckState.Checked)
+        self.signalListWidget.addItem(item)
 
-            self.currentPositions.append(0)  
-            self.signalColors.append(self.selectedColor)  
-            self.signalSpeeds.append(self.defaultSpeed)  
+        self.currentPositions.append(0)  
+        self.signalColors.append(self.selectedColor)  
+        self.signalSpeeds.append(self.defaultSpeed)  
 
-            self.update_play_button_state()
+        self.update_play_button_state()
 
-            # legend_line = pg.PlotDataItem([0, 1], [0, 0], pen=pg.mkPen(color=self.selectedColor, width=2))
-            # self.legend.addItem(legend_line, signalName)
+        if self.signalListWidget.count() == 1:
+            self.signalListWidget.setCurrentRow(0)
 
-            x_padding = (max(time) - min(time)) * 0.05  
-            y_padding = (max(amplitude) - min(amplitude)) * 0.05  
+        x_padding = (max(time) - min(time)) * 0.05  
+        y_padding = (max(amplitude) - min(amplitude)) * 0.05  
 
-            self.graph.setXRange(min(time) - x_padding, max(time) + x_padding, padding=0)
-            self.graph.setYRange(min(amplitude) - y_padding, max(amplitude) + y_padding, padding=0)
+        self.graph.setXRange(min(time) - x_padding, max(time) + x_padding, padding=0)
+        self.graph.setYRange(min(amplitude) - y_padding, max(amplitude) + y_padding, padding=0)
 
-            self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
-                                yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
+        self.graph.setLimits(xMin=min(time) - x_padding, xMax=max(time) + x_padding, 
+                            yMin=min(amplitude) - y_padding, yMax=max(amplitude) + y_padding)
   def update(self):
         if self.isPaused:
             return  
@@ -491,19 +459,7 @@ class GraphWidget(QtWidgets.QWidget):
         index = self.signalListWidget.row(item)
         self.signalSpeeds[index] = self.speedSlider.value() 
 
-#   def clear_selected_graph(self):
-#         selected_items = self.signalListWidget.selectedItems()
-#         for item in selected_items:
-#             index = self.signalListWidget.row(item)
 
-#             if index < len(self.signalsLines) and self.signalsLines[index] is not None:
-#                 self.graph.removeItem(self.signalsLines[index])  
-#                 self.signalsLines[index] = None  
-#                 self.currentPositions[index] = 0
-#                 # Remove from legend
-#                 self.legend.removeItem(item.text())
-#         if not self.isPaused:
-#             self.play_pause()
   def rewind(self):
             self.graph.setXRange(0, 1 , padding=10)
             self.isPaused = False
@@ -612,35 +568,6 @@ class GraphWidget(QtWidgets.QWidget):
             # transferFrom.signalListWidget.takeItem(index)           
             # transferFrom.signalListWidget.takeItem(index)
 
-
-            
-#   def connect_real_time_signal(self):
-#         if self.isConnected:
-#             itemIsExist = []
-#             newItem = "AAPL finance"
-#             item = QtWidgets.QListWidgetItem(newItem)
-#             item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
-#             item.setCheckState(QtCore.Qt.CheckState.Unchecked)
-            
-#             for index in range(self.signalListWidget.count()):
-#                 if self.signalListWidget.item(index).text() == newItem:
-#                     itemIsExist.append(True)      
-#                 else:  
-#                     itemIsExist.append(False)
-#             if True in itemIsExist:
-#                 pass
-#             else:
-#                 self.signalListWidget.addItem(item)     
-            
-#             self.times = []  
-#             self.prices = []  
-            
-#             self.timer = QtCore.QTimer()  
-#             self.timer.setInterval(1000)  
-#             self.timer.timeout.connect(self.fetch_real_time_signal)
-#             self.timer.start()
-#         else:
-#             self.timer.stop()
   def edit_signal_name(self, item):
         item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsEditable)
         self.signalListWidget.editItem(item)

@@ -2,10 +2,9 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QSlider, QHBoxLayout,QFileDialog, QLabel, QColorDialog,QFrame
+from PyQt6.QtWidgets import QFrame
 from PyQt6 import QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt6.QtCore import QTimer, Qt
 
 
 class RadarPlotWidget(FigureCanvas):
