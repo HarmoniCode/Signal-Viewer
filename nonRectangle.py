@@ -47,3 +47,5 @@ class RadarPlotWidget(FigureCanvas):
                          backgroundcolor=self.fill_color)
 
         self.draw()
+
+

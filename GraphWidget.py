@@ -111,11 +111,11 @@ class GraphWidget(QtWidgets.QWidget):
 
     
     
-    self.connectRealTimeSignalButton = QtWidgets.QPushButton()
-    self.connectRealTimeSignalButton.setIcon(self.connectIcon)
-    self.connectRealTimeSignalButton.setFixedWidth(50)
-    self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
-    self.controlLayout3.addWidget(self.connectRealTimeSignalButton)
+    # self.connectRealTimeSignalButton = QtWidgets.QPushButton()
+    # self.connectRealTimeSignalButton.setIcon(self.connectIcon)
+    # self.connectRealTimeSignalButton.setFixedWidth(50)
+    # self.connectRealTimeSignalButton.clicked.connect(self.connect_stop)
+    # self.controlLayout3.addWidget(self.connectRealTimeSignalButton)
 
     self.disconnectIcon = QtGui.QIcon()
     self.disconnectIcon.addPixmap(QtGui.QPixmap("./control/pics/clarity--disconnected-solid.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.On)
@@ -572,7 +572,7 @@ class GraphWidget(QtWidgets.QWidget):
     for item in selected_items:
         index = transferFrom.signalListWidget.row(item)
 
-        if index < len(transferFrom.signalsLines) and transferFrom.signalsLines[index] is not None:
+        if index < len(transferFrom.signals):
             time, amplitude = transferFrom.signals[index]
             color = transferFrom.signalColors[index]
             speed = transferFrom.signalSpeeds[index]
@@ -589,46 +589,48 @@ class GraphWidget(QtWidgets.QWidget):
             transferTo.signalListWidget.addItem(newItem)
 
             transferFrom.graph.removeItem(transferFrom.signalsLines[index])
-            
-            transferTo.legend.addItem(self.signalsLines[index],item.text())
-            
             transferFrom.signalsLines[index] = None
-            transferFrom.legend.removeItem(item.text())
 
             del transferFrom.signals[index]
             del transferFrom.signalsLines[index]
             del transferFrom.currentPositions[index]
             del transferFrom.signalColors[index]
             del transferFrom.signalSpeeds[index]
-            transferFrom.signalListWidget.takeItem(index)           
+
             transferFrom.signalListWidget.takeItem(index)
-  def connect_real_time_signal(self):
-        if self.isConnected:
-            itemIsExist = []
-            newItem = "AAPL finance"
-            item = QtWidgets.QListWidgetItem(newItem)
-            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
-            item.setCheckState(QtCore.Qt.CheckState.Unchecked)
+
+            # transferFrom.signalListWidget.takeItem(index)           
+            # transferFrom.signalListWidget.takeItem(index)
+
+
             
-            for index in range(self.signalListWidget.count()):
-                if self.signalListWidget.item(index).text() == newItem:
-                    itemIsExist.append(True)      
-                else:  
-                    itemIsExist.append(False)
-            if True in itemIsExist:
-                pass
-            else:
-                self.signalListWidget.addItem(item)     
+#   def connect_real_time_signal(self):
+#         if self.isConnected:
+#             itemIsExist = []
+#             newItem = "AAPL finance"
+#             item = QtWidgets.QListWidgetItem(newItem)
+#             item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsSelectable)
+#             item.setCheckState(QtCore.Qt.CheckState.Unchecked)
             
-            self.times = []  
-            self.prices = []  
+#             for index in range(self.signalListWidget.count()):
+#                 if self.signalListWidget.item(index).text() == newItem:
+#                     itemIsExist.append(True)      
+#                 else:  
+#                     itemIsExist.append(False)
+#             if True in itemIsExist:
+#                 pass
+#             else:
+#                 self.signalListWidget.addItem(item)     
             
-            self.timer = QtCore.QTimer()  
-            self.timer.setInterval(1000)  
-            self.timer.timeout.connect(self.fetch_real_time_signal)
-            self.timer.start()
-        else:
-            self.timer.stop()
+#             self.times = []  
+#             self.prices = []  
+            
+#             self.timer = QtCore.QTimer()  
+#             self.timer.setInterval(1000)  
+#             self.timer.timeout.connect(self.fetch_real_time_signal)
+#             self.timer.start()
+#         else:
+#             self.timer.stop()
   def edit_signal_name(self, item):
         item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsEditable)
         self.signalListWidget.editItem(item)
@@ -650,7 +652,7 @@ class GraphWidget(QtWidgets.QWidget):
         else:
             self.real_time_plot.setData(self.times, self.prices) 
   
-    def show_hide_signal(self):
+  def show_hide_signal(self):
         selected_items = self.signalListWidget.selectedItems()
         for item in selected_items:
                 index = self.signalListWidget.row(item)

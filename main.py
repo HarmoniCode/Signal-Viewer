@@ -187,9 +187,12 @@ class SignalViewer(QtWidgets.QMainWindow):
         self.secondPage = NonRecPage(self)
         self.stack.addWidget(self.secondPage)  
 
-    def align_speed(self):
         self.real_signal_page = RealTimeSignalPage(self)
         self.stack.addWidget(self.real_signal_page)  
+
+    # def align_speed(self):
+    #     self.real_signal_page = RealTimeSignalPage(self)
+    #     self.stack.addWidget(self.real_signal_page)  
         
 
     def alignSpeed(self):
@@ -204,7 +207,7 @@ class SignalViewer(QtWidgets.QMainWindow):
 
     def play_linked(self):
         if self.linked:
-          self.align_speed()
+          self.alignSpeed()
 
           if self.graphBox1.isPaused:
               self.graphBox1.playPauseButton.setIcon(self.graphBox1.pauseIcon)
@@ -217,7 +220,7 @@ class SignalViewer(QtWidgets.QMainWindow):
 
     def rewind_linked(self):
         if self.linked:
-            self.align_speed()
+            self.alignSpeed()
             if self.graphBox1.isPaused:
                 self.graphBox1.playPauseButton.setIcon(self.graphBox1.playIcon)
                 self.graphBox2.playPauseButton.setIcon(self.graphBox2.playIcon)
@@ -250,7 +253,7 @@ class SignalViewer(QtWidgets.QMainWindow):
 
 
     def show_second_page(self):
-        self.stack.setCurrentWidget(self.second_page)
+        self.stack.setCurrentWidget(self.secondPage)
         
     def show_real_signal_page(self):
         self.stack.setCurrentWidget(self.real_signal_page)
