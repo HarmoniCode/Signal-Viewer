@@ -10,18 +10,17 @@ QFrame#general_real_time_signal_frame,#general_radar_frame{
 
 
 QPushButton {
-    background-color:   rgb(88, 160, 255);
-    color: white;
+    background-color: #8cb6ec;
     font-weight: bold;
     font-size: 12px;
     border-radius: 5px;
     padding: 10px 0;
     height: 15px;
-}
-
-QPushButton:hover {
-    background-color:#8cb6ec;
-}
+  }
+  
+  QPushButton:hover {
+    background-color: #b1ccf0;
+  }
 QPushButton:disabled {
     background-color: #ccc;
     color: #666;
