@@ -88,7 +88,7 @@ class SecondPage(QtWidgets.QWidget):
 
         self.playPauseButton = QtWidgets.QPushButton()
         # self.playPauseButton.setFixedWidth(50)
-        self.playPauseButton.setIcon(self.pauseIcon)
+        self.playPauseButton.setIcon(self.playIcon)
         self.playPauseButton.clicked.connect(self.play_pause)
         # self.cineModeLayout.addWidget(self.playPauseButton)
         # self.leftLayout.addLayout(self.cineModeLayout)
@@ -167,10 +167,10 @@ class SecondPage(QtWidgets.QWidget):
     def play_pause(self):
         if self.isPaused:
             self.timer.start()
-            self.playPauseButton.setIcon(self.pauseIcon)
-        else:
-            self.timer.stop()
             self.playPauseButton.setIcon(self.playIcon)
+        else:
+            self.playPauseButton.setIcon(self.pauseIcon)
+            self.timer.stop()
         self.isPaused = not self.isPaused
         
     def connect_real_time_signal(self):

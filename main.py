@@ -311,8 +311,6 @@ class SignalViewer(QtWidgets.QMainWindow):
         subsignal1 = self.extract_signal(self.graphBox1, range1)
         subsignal2 = self.extract_signal(self.graphBox2, range2)
 
-
-
         gap = self.gapSlider.value()  
         interpolationOrder = self.interpolationDropdown.currentText()  
         gluedSignal = self.process_gap_or_overlap(subsignal1, subsignal2, gap, interpolationOrder)
@@ -336,44 +334,42 @@ class SignalViewer(QtWidgets.QMainWindow):
         return amplitude[mask]
 
     def process_gap_or_overlap(self, subsignal1, subsignal2, gap, interpolation_order):
-      if gap > 0:
-        interpolation_range = np.linspace(0, gap - 1, gap)
-        if interpolation_order == "Linear":
-            gap_signal = np.linspace(subsignal1[-1], subsignal2[0], gap)
-        elif interpolation_order == "Cubic":
-            if len(subsignal1) >= 3 and len(subsignal2) >= 3:
-              x_points = [-2,-1, 0, 1, 2,3]
-              y_points = [subsignal1[-3],subsignal1[-2], subsignal1[-1], subsignal2[0], subsignal2[1],subsignal2[2]]
-              akima_interp = Akima1DInterpolator(x_points, y_points)
-              gap_signal = akima_interp(np.linspace(0, 1, gap))
-            else:
-                print("Not enough data points for cubic interpolation.")
-                return None  
-        elif interpolation_order == "Nearest":
-            gap_signal = interp.interp1d([0, gap - 1], [subsignal1[-1], subsignal2[0]], kind='nearest')(interpolation_range)
+        if gap > 0:
+            interpolation_range = np.linspace(0, gap - 1, gap)
+            if interpolation_order == "Linear":
+                gap_signal = np.linspace(subsignal1[-1], subsignal2[0], gap)
+            elif interpolation_order == "Cubic":
+                if len(subsignal1) >= 3 and len(subsignal2) >= 3:
+                    x_points = [-2, -1, 0, 1, 2, 3]
+                    y_points = [subsignal1[-3], subsignal1[-2], subsignal1[-1], subsignal2[0], subsignal2[1], subsignal2[2]]
+                    akima_interp = Akima1DInterpolator(x_points, y_points)
+                    gap_signal = akima_interp(np.linspace(0, 1, gap))
+                else:
+                    print("Not enough data points for cubic interpolation.")
+                    return None
+            elif interpolation_order == "Nearest":
+                gap_signal = interp.interp1d([0, gap - 1], [subsignal1[-1], subsignal2[0]], kind='nearest')(interpolation_range)
 
-        glued_signal = np.concatenate([subsignal1, gap_signal, subsignal2])
+            glued_signal = np.concatenate([subsignal1, gap_signal, subsignal2])
 
-      else:
-          overlap = abs(gap)
-          
-          if overlap > len(subsignal1) or overlap > len(subsignal2):
-              overlap = min(len(subsignal1), len(subsignal2))  
+        else:
+            overlap = abs(gap)
+            
+            if overlap > len(subsignal1) or overlap > len(subsignal2):
+                overlap = min(len(subsignal1), len(subsignal2))  
 
-          
-          if interpolation_order == "Linear":
-              interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='linear')
-          elif interpolation_order == "Cubic":
-              interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='cubic')
-          elif interpolation_order == "Nearest":
-              interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='nearest')
+            # if interpolation_order == "Linear":
+            #     interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='linear')
+            # elif interpolation_order == "Cubic":
+            #     interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='cubic')
+            # elif interpolation_order == "Nearest":
+            #     interpolation_func = interp.interp1d(np.arange(overlap), subsignal1[-overlap:], kind='nearest')
 
-          
-          interpolation_range = np.linspace(0, overlap - 1, overlap)
-          transition = (1 - interpolation_func(interpolation_range)) * subsignal1[-overlap:] + interpolation_func(interpolation_range) * subsignal2[:overlap]
-          glued_signal = np.concatenate([subsignal1[:-overlap], transition, subsignal2[overlap:]])
+            interpolation_range = np.linspace(0, overlap - 1, overlap)
+            transition = (1 - interpolation_range / (overlap - 1)) * subsignal1[-overlap:] + (interpolation_range / (overlap - 1)) * subsignal2[:overlap]
+            glued_signal = np.concatenate([subsignal1[:-overlap], transition, subsignal2[overlap:]])
 
-      return glued_signal  
+        return glued_signal
 
     def update_graphs(self):
         self.graphBox1.update()
