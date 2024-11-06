@@ -123,22 +123,19 @@ We welcome contributions to enhance Signal Viewer’s functionality and usabilit
 ### Contributors:
 
 <a href="https://github.com/ahmed-226">
-  Ahmed Abdelaal
   <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" width = "150" heigh = "150"/>
   
 </a>
 <a href="https://github.com/louai111">
-  Louai Eleslamboly
   <img src="https://avatars.githubusercontent.com/u/79408256?v=4" alt="louai eleslamboly image" width = "150" heigh = "150"/>
   
 </a>
 <a href="https://github.com/Anasmo1323">
-  Anas Mohamed
   <img src="https://avatars.githubusercontent.com/u/116515989?v=4" alt="anas mohamed image" width = "150" heigh = "150"/>
   
 </a>
 <a href="https://github.com/aliyounis33">
-  Ali Younis
+
   <img src="[https://avatars.githubusercontent.com/u/125222093?v=4](https://media.licdn.com/dms/image/v2/D4E03AQG6W9o6HSAzaQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1684759057692?e=1736380800&v=beta&t=S_EJxWi9SeJOqKYbFMSFoqB_gbEvfBdl04B4RC4M4w0)" alt="ali younis image" width = "150" heigh = "150"/>
   
 </a>
@@ -149,7 +146,7 @@ We welcome contributions to enhance Signal Viewer’s functionality and usabilit
 
 ### Built With
 
-* <img src="https://img.icons8.com/?size=100&id=13441&format=png&color=000000" alt="python logo" width = "150" heigh = "150"/>
+* <img src="https://img.icons8.com/?size=100&id=13441&format=png&color=000000" alt="python logo" width = "80" heigh = "80"/>
 
 
 
