@@ -38,7 +38,9 @@
 
 <img src="Icons/pics/first_page.png" alt="first page screenshot">
 
-**Signal Viewer** is a powerful and intuitive application for visualizing and analyzing biomedical signals such as ECG, EEG, and EMG. With a user-friendly interface, this tool allows for easy loading, display, and interaction with various signal datasets, making it essential for researchers, clinicians, and students in biomedical engineering.
+<br>
+
+A **Signal Viewer** is a powerful and intuitive application for visualizing and analyzing biomedical signals such as ECG, EEG, and EMG. With a user-friendly interface, this tool allows for easy loading, display, and interaction with various signal datasets, making it essential for researchers, clinicians, and students in biomedical engineering.
 
 ## Features
 
@@ -122,19 +124,22 @@ We welcome contributions to enhance Signal Viewer’s functionality and usabilit
 
 <a href="https://github.com/ahmed-226">
   <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" width = "150" heigh = "150"/>
+  #Ahmed Abdelaal
 </a>
 <a href="https://github.com/louai111">
   <img src="https://avatars.githubusercontent.com/u/79408256?v=4" alt="louai eleslamboly image" width = "150" heigh = "150"/>
+  #Louai Eleslamboly
 </a>
 <a href="https://github.com/Anasmo1323">
   <img src="https://avatars.githubusercontent.com/u/116515989?v=4" alt="anas mohamed image" width = "150" heigh = "150"/>
+  #Anas Mohamed
 </a>
 <a href="https://github.com/aliyounis33">
   <img src="https://avatars.githubusercontent.com/u/125222093?v=4" alt="ali younis image" width = "150" heigh = "150"/>
+  #Ali Younis
 </a>
 
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
@@ -144,7 +149,7 @@ We welcome contributions to enhance Signal Viewer’s functionality and usabilit
 * [![React][React.js]][React-url]
 * [![Vue][Vue.js]][Vue-url]
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 
 <!-- CONTACT -->
@@ -158,8 +163,6 @@ Anas Mohamed - ##@eng-st.cu.edu.eg.com
 Ali Younis - ##@eng-st.cu.edu.eg.com
 <br>
 
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
