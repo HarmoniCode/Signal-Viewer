@@ -1,8 +1,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+  <a>
+    <img src="Icons/pics/logo.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">Multi-Channel Signal Viewer</h3>
@@ -52,7 +52,8 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](Icons/pics/first_page.png)
+<img src="Icons/pics/first_page.png" alt="first page screenshot" width="80" height="80">
+<img src="Icons/pics/second_page_image.png" alt="second page screenshot" width="80" height="80">
 
 There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
 
