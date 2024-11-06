@@ -149,16 +149,16 @@ Don't forget to give the project a star! Thanks again!
 ### contributors:
 
 <a href="https://github.com/ahmed-226">
-  <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" width = "80" heigh = "80"/>
+  <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" width = "150" heigh = "150"/>
 </a>
 <a href="https://github.com/louai111">
-  <img src="https://avatars.githubusercontent.com/u/79408256?v=4" alt="louai eleslamboly image" width = "80" heigh = "80"/>
+  <img src="https://avatars.githubusercontent.com/u/79408256?v=4" alt="louai eleslamboly image" width = "150" heigh = "150"/>
 </a>
 <a href="https://github.com/Anasmo1323">
-  <img src="https://avatars.githubusercontent.com/u/116515989?v=4" alt="anas mohamed image" width = "80" heigh = "80"/>
+  <img src="https://avatars.githubusercontent.com/u/116515989?v=4" alt="anas mohamed image" width = "150" heigh = "150"/>
 </a>
 <a href="https://github.com/aliyounis33">
-  <img src="https://avatars.githubusercontent.com/u/125222093?v=4" alt="ali younis image" width = "80" heigh = "80"/>
+  <img src="https://avatars.githubusercontent.com/u/125222093?v=4" alt="ali younis image" width = "150" heigh = "150"/>
 </a>
 
 
