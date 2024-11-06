@@ -102,11 +102,14 @@ Don't forget to give the project a star! Thanks again!
 <!-- CONTACT -->
 ## Contact
 Ahmed Abdelaal - ##@eng-st.cu.edu.eg.com
+<br>
 Louai Eleslamboly - louai.eleslamboly03@eng-st.cu.edu.eg.com
+<br>
 Anas Mohamed - ##@eng-st.cu.edu.eg.com
+<br>
 Ali Younis - ##@eng-st.cu.edu.eg.com
+<br>
 
-Project Link: [(https://github.com/ahmed-226/Signal-Viewer)]((https://github.com/ahmed-226/Signal-Viewer))
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
