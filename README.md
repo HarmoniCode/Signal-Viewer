@@ -124,19 +124,19 @@ We welcome contributions to enhance Signal Viewer’s functionality and usabilit
 
 <a href="https://github.com/ahmed-226">
   <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" width = "150" heigh = "150"/>
-  #Ahmed Abdelaal
+  Ahmed Abdelaal
 </a>
 <a href="https://github.com/louai111">
   <img src="https://avatars.githubusercontent.com/u/79408256?v=4" alt="louai eleslamboly image" width = "150" heigh = "150"/>
-  #Louai Eleslamboly
+  Louai Eleslamboly
 </a>
 <a href="https://github.com/Anasmo1323">
   <img src="https://avatars.githubusercontent.com/u/116515989?v=4" alt="anas mohamed image" width = "150" heigh = "150"/>
-  #Anas Mohamed
+  Anas Mohamed
 </a>
 <a href="https://github.com/aliyounis33">
-  <img src="https://avatars.githubusercontent.com/u/125222093?v=4" alt="ali younis image" width = "150" heigh = "150"/>
-  #Ali Younis
+  <img src="[https://avatars.githubusercontent.com/u/125222093?v=4](https://media.licdn.com/dms/image/v2/D4E03AQG6W9o6HSAzaQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1684759057692?e=1736380800&v=beta&t=S_EJxWi9SeJOqKYbFMSFoqB_gbEvfBdl04B4RC4M4w0)" alt="ali younis image" width = "150" heigh = "150"/>
+  Ali Younis
 </a>
 
 
@@ -145,22 +145,28 @@ We welcome contributions to enhance Signal Viewer’s functionality and usabilit
 
 ### Built With
 
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
+* <img src="https://img.icons8.com/?size=100&id=13441&format=png&color=000000" alt="python logo" width = "150" heigh = "150"/>
 
 
 
 
 <!-- CONTACT -->
 ## Contact
-Ahmed Abdelaal - ##@eng-st.cu.edu.eg.com
+<a href="https://www.linkedin.com/in/ahmed-mahmoud-5837b8253/">
+  Ahmed Abdelaal
+</a>
 <br>
-Louai Eleslamboly - louai.eleslamboly03@eng-st.cu.edu.eg.com
+<a href="https://www.linkedin.com/in/louai-eleslamboly1/">
+  Louai Eleslamboly
+</a>
 <br>
-Anas Mohamed - ##@eng-st.cu.edu.eg.com
+<a href="https://www.linkedin.com/in/anas-mohamed-hany-71a9a5235/">
+  Anas Mohamed
+</a>
 <br>
-Ali Younis - ##@eng-st.cu.edu.eg.com
+<a href="https://www.linkedin.com/in/ali-younis-98b780277/">
+  Ali Younis
+</a>
 <br>
 
 
