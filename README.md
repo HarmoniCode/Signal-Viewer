@@ -118,30 +118,7 @@ We welcome contributions to enhance Signal Viewer’s functionality and usabilit
 5. **Open a pull request**.
 
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-### Built With
-
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-
-<!-- CONTRIBUTING -->
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please reach out to one of the developers of this project.
-Don't forget to give the project a star! Thanks again!
-
-### contributors:
+### Contributors:
 
 <a href="https://github.com/ahmed-226">
   <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" width = "150" heigh = "150"/>
@@ -158,6 +135,17 @@ Don't forget to give the project a star! Thanks again!
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+### Built With
+
+* [![Next][Next.js]][Next-url]
+* [![React][React.js]][React-url]
+* [![Vue][Vue.js]][Vue-url]
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 <!-- CONTACT -->
 ## Contact
