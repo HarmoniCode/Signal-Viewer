@@ -23,6 +23,8 @@
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#installation">Installation</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -36,9 +38,85 @@
 
 <img src="Icons/pics/first_page.png" alt="first page screenshot">
 
-lorem ipsum
+**Signal Viewer** is a powerful and intuitive application for visualizing and analyzing biomedical signals such as ECG, EEG, and EMG. With a user-friendly interface, this tool allows for easy loading, display, and interaction with various signal datasets, making it essential for researchers, clinicians, and students in biomedical engineering.
 
-Use the `BLANK_README.md` to get started.
+## Features
+
+- **Multi-Signal Visualization**: Display multiple signals simultaneously with synchronized controls.
+- **Play/Pause Functionality**: Control signal playback with play and pause buttons.
+- **Zoom and Pan**: Zoom in and out, and pan for detailed signal inspection.
+- **Linked Controls**: Synchronize playback and control across multiple signal graphs.
+- **Signal Alignment**: Align the speed of multiple signals for comparative analysis.
+- **Region of Interest (ROI)**: Highlight specific regions of the signal for focused analysis.
+- **Signal Processing**: Perform operations such as signal extraction, gap/overlap processing, and signal merging.
+- **Report Generation**: Generate detailed reports on the analyzed signals.
+- **Customizable Interface**: Modify the appearance and layout to suit your needs.
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/signal-viewer.git
+   ```
+
+2. **Navigate to the project directory**:
+   ```bash
+   cd signal-viewer
+   ```
+
+3. **Install the required dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Usage
+
+1. **Run the main application**:
+   ```bash
+   python main.py
+   ```
+
+2. **Load signal datasets** from the `Datasets` directory.
+
+3. **Control playback** using the play, pause, zoom, and pan buttons.
+
+4. **Synchronize playback** for multiple signals using linked controls.
+
+5. **Highlight regions of interest** and perform signal processing as needed.
+
+6. **Generate reports** for detailed analysis and documentation.
+
+## Project Structure
+
+- **`main.py`**: Initializes and runs the Signal Viewer application.
+- **`GraphWidget.py`**: Contains the `GraphWidget` class for rendering and interacting with signal graphs.
+- **`ReportDialog.py`**: Handles generation and display of signal analysis reports.
+- **`Datasets`**: Directory for sample signal datasets.
+- **`Styles`**: Directory with QSS files for customizing the app's appearance.
+- **`Icons`**: Directory for icons used in the application.
+
+## Contributing
+
+We welcome contributions to enhance Signal Viewer’s functionality and usability! Follow these steps to contribute:
+
+1. **Fork the repository**.
+2. **Create a new branch**:
+   ```bash
+   git checkout -b feature-name
+   ```
+
+3. **Make your changes** and commit:
+   ```bash
+   git commit -m "Add your message here"
+   ```
+
+4. **Push to the branch**:
+   ```bash
+   git push origin feature-name
+   ```
+
+5. **Open a pull request**.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -46,27 +124,9 @@ Use the `BLANK_README.md` to get started.
 
 ### Built With
 
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
 * [![Next][Next.js]][Next-url]
 * [![React][React.js]][React-url]
 * [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
