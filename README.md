@@ -5,10 +5,10 @@
     <img src="Icons/pics/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Multi-Channel Signal Viewer</h3>
+  <h3 align="center">Signal Viewer</h3>
 
   <p align="center">
-    Your best solution to view signals!
+    Your best solution to viewing signals!
 </div>
 
 
@@ -147,6 +147,14 @@ If you have a suggestion that would make this better, please reach out to one of
 Don't forget to give the project a star! Thanks again!
 
 ### contributors:
+
+
+<p align="center">
+  <img src="https://avatars.githubusercontent.com/u/124817234?v=4" width="24%">
+  <img src="https://github.com/account" width="24%">
+  <img src="https://avatars.githubusercontent.com/u/116515989?v=4" width="24%">
+  <img src="[image4.png](https://avatars.githubusercontent.com/u/125222093?v=4)" width="24%">
+</p>
 
 <a href="https://github.com/ahmed-226">
   <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" />
