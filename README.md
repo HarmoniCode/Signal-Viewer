@@ -148,14 +148,6 @@ Don't forget to give the project a star! Thanks again!
 
 ### contributors:
 
-
-<p align="center">
-  <img src="https://avatars.githubusercontent.com/u/124817234?v=4" width="24%">
-  <img src="https://github.com/account" width="24%">
-  <img src="https://avatars.githubusercontent.com/u/116515989?v=4" width="24%">
-  <img src="[image4.png](https://avatars.githubusercontent.com/u/125222093?v=4)" width="24%">
-</p>
-
 <a href="https://github.com/ahmed-226">
   <img src="https://avatars.githubusercontent.com/u/124817234?v=4" alt="ahmed abdelaal image" />
 </a>
