@@ -54,6 +54,12 @@ A **Signal Viewer** is a powerful and intuitive application for visualizing and 
 - **Report Generation**: Generate detailed reports on the analyzed signals.
 - **Customizable Interface**: Modify the appearance and layout to suit your needs.
 
+
+
+https://github.com/user-attachments/assets/f765d72a-f8d8-4948-9389-0c810c6c9d1e
+
+
+
 ## Installation
 
 1. **Clone the repository**:
